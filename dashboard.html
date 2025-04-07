@@ -11,6 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
+<div id="sidebar-container"></div>
   <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
   <header class="header">
     <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
@@ -47,6 +48,15 @@
   </section>
 
   <script>
+ // Load sidebar.html into #sidebar-container
+  fetch('sidebar.html')
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('sidebar-container').innerHTML = data;
+    })
+    .catch(error => console.error('Error loading sidebar:', error));
+
+
     // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
