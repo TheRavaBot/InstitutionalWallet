@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+  <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
+  <header class="header">
+    <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
+  </header>
+
+  <section class="page-section dashboard">
+    <div class="icon-spot">
+      <img src="icon.png" alt="Dashboard Icon" class="icon">
+    </div>
+    </div>
+  </section>
+
+  <section class="page-section">
+    <h2>Transaction History</h2>
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Amount (Token)</th>
+          <th>Naira Equivalent</th>
+          <th>Breakdown</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="transactionTableBody">
+        <!-- Filled via JavaScript -->
+      </tbody>
+    </table>
+  </section>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+      authDomain: "project-iot-51262.firebaseapp.com",
+      databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+      projectId: "project-iot-51262",
+      storageBucket: "project-iot-51262.appspot.com",
+      messagingSenderId: "785303672386",
+      appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      // Redirect to login if no session
+      window.location.href = "login.html";
+    }
+
+    // Fetch user data
+    db.ref("unilorin-ict/users/" + userId).once("value", snapshot => {
+      const user = snapshot.val();
+      if (user) {
+        document.getElementById("welcomeUser").innerText = `Welcome, ${user.name}!`;
+        const balance = parseFloat(user.balance || 0);
+        document.getElementById("tokenAmount").innerText = (balance / 800).toFixed(2);
+        document.getElementById("nairaAmount").innerText = "₦" + balance.toFixed(2);
+      }
+    });
+
+    // Fetch transaction history
+    db.ref("unilorin-ict/transactions/" + userId)
+      .orderByChild("date")
+      .once("value", (snapshot) => {
+        const tbody = document.getElementById("transactionTableBody");
+        const transactions = [];
+
+        snapshot.forEach((childSnap) => {
+          transactions.push(childSnap.val());
+        });
+
+        transactions.reverse().forEach((txn) => {
+          const row = document.createElement("tr");
+
+          let breakdownText = "";
+          if (txn.breakdown && typeof txn.breakdown === "object") {
+            const items = [];
+            for (const key in txn.breakdown) {
+              const label = key.replace(/fee$/, "").replace(/_/g, " ");
+              const value = parseFloat(txn.breakdown[key]);
+              items.push(`${capitalize(label)}: ₦${value.toLocaleString()}`);
+            }
+            breakdownText = items.join(", ");
+          } else {
+            breakdownText = "—"; // No breakdown
+          }
+
+          row.innerHTML = `
+            <td>${capitalize(txn.type)}</td>
+            <td>${(parseFloat(txn.amount)).toFixed(2)}</td>
+            <td>₦${parseFloat(txn.naira_equivalent).toFixed(2)}</td>
+            <td>${breakdownText}</td>
+            <td>${new Date(txn.date).toLocaleString()}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      });
+
+    function capitalize(text) {
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+  </script>
+</body>
+</html>

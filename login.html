@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+  <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
+  <header class="header">
+    <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
+  </header>
+
+  <section class="page-section dashboard">
+    <div class="icon-spot">
+      <img src="icon.png" alt="Dashboard Icon" class="icon" />
+      <h2>UNIVERSITY OF ILORIN</h2>
+    </div>
+
+    <form id="loginForm" autocomplete="off">
+      <label for="email">Email:</label>
+      <input type="email" id="email" required autocomplete="off" />
+
+      <label for="password">Password:</label>
+      <input
+        type="password"
+        id="password"
+        required
+        autocomplete="new-password"
+        onfocus="this.setAttribute('readonly', 'readonly'); this.removeAttribute('readonly');"
+      />
+
+      <button type="submit" class="btn">Login</button>
+    </form>
+
+    <p>Don't have an account? <a href="register.html">Register here</a></p>
+  </section>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+      authDomain: "project-iot-51262.firebaseapp.com",
+      databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+      projectId: "project-iot-51262",
+      storageBucket: "project-iot-51262.appspot.com",
+      messagingSenderId: "785303672386",
+      appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const password = document.getElementById("password").value.trim();
+console.log(email );
+console.log(password);
+      const usersRef = db.ref("unilorin-ict/users");
+      let found = false;
+
+      usersRef.once("value", (snapshot) => {
+        snapshot.forEach((childSnap) => {
+          const user = childSnap.val();
+          if (user.email.toLowerCase() === email && user.password === password) {
+            // Match found
+            found = true;
+            localStorage.setItem("user_id", childSnap.key);
+            localStorage.setItem("name", user.name);
+            localStorage.setItem("email", user.email);
+            localStorage.setItem("balance", user.balance || 0);
+
+            // Redirect to dashboard
+            window.location.href = "dashboard.html";
+          }
+        });
+
+        if (!found) {
+          alert("Invalid email or password");
+        }
+      });
+    });
+  </script>
+</body>
+</html>

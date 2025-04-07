@@ -1,0 +1,39 @@
+<?php
+session_start();
+include 'db_connect.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost Found Items</title>
+    <link rel="stylesheet" href="styles.css">
+  
+</head>
+<body>
+    
+    <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
+    <header class="header">
+        <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
+    </header>
+
+    <section class="page-section dashboard">
+        <div class="icon-spot">
+            <img src="icon.png" alt="Dashboard Icon" class="icon">
+        </div>
+        <h2>--Opps! PAGE UNDER DEVELOPMENT--</h2>
+    </section>
+    </header>
+    
+   
+    
+</body>
+</html>

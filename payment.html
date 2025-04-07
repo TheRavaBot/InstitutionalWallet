@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Make Payment</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+  <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
+  <header class="header">
+    <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
+  </header>
+
+  <section class="page-section dashboard">
+    <div class="icon-spot">
+      <img src="icon.png" alt="Dashboard Icon" class="icon" />
+      <h2>Make Payments</h2>
+    </div>
+  </section>
+
+  <section class="page-section">
+    <div id="paymentInfo">
+      <p><strong>Email:</strong> <span id="userEmail"></span></p>
+      <p><strong>Level:</strong> <span id="userLevel"></span></p>
+      <p><strong>Available Balance:</strong> ₦<span id="userBalance"></span></p>
+
+      <form id="feeForm"></form>
+
+      <p><strong>Total Selected:</strong> ₦<span id="totalFee">0</span></p>
+      <button onclick="makePayment()">Pay Selected Fees</button>
+    </div>
+    <p><a href="dashboard.html">← Back to Dashboard</a></p>
+  </section>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+      authDomain: "project-iot-51262.firebaseapp.com",
+      databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+      projectId: "project-iot-51262",
+      storageBucket: "project-iot-51262.appspot.com",
+      messagingSenderId: "785303672386",
+      appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let currentUserKey = null;
+    let currentUser = null;
+    let feeItems = {};
+    let selectedTotal = 0;
+
+    async function fetchUserAndFees() {
+      const email = localStorage.getItem("email");
+      if (!email) {
+        alert("User not logged in.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      document.getElementById("userEmail").textContent = email;
+
+      const userSnap = await db.ref("unilorin-ict/users").orderByChild("email").equalTo(email).once("value");
+      if (!userSnap.exists()) {
+        alert("User not found.");
+        return;
+      }
+
+      const userData = Object.entries(userSnap.val())[0];
+      currentUserKey = userData[0];
+      currentUser = userData[1];
+
+      const level = currentUser.level;
+      const balance = parseFloat(currentUser.balance || 0);
+
+      document.getElementById("userLevel").textContent = level;
+      document.getElementById("userBalance").textContent = balance.toLocaleString();
+
+      const feeSnap = await db.ref(`unilorin-ict/fees/${level}`).once("value");
+      if (!feeSnap.exists()) {
+        alert("Fees for your level not found.");
+        return;
+      }
+
+      feeItems = feeSnap.val();
+      renderFeeOptions(feeItems);
+    }
+
+    function renderFeeOptions(fees) {
+      const form = document.getElementById("feeForm");
+      form.innerHTML = "";
+
+      for (const key in fees) {
+        const amount = parseFloat(fees[key]);
+
+        const label = document.createElement("label");
+        label.innerHTML = `
+          <input type="checkbox" name="feeItem" value="${amount}" data-key="${key}" onchange="calculateTotal()" />
+          ${key.replace(/fee$/, '').toUpperCase()} - ₦${amount.toLocaleString()}
+        `;
+        form.appendChild(label);
+        form.appendChild(document.createElement("br"));
+      }
+    }
+
+    function calculateTotal() {
+      const checkboxes = document.querySelectorAll('input[name="feeItem"]:checked');
+      selectedTotal = 0;
+
+      checkboxes.forEach(cb => {
+        selectedTotal += parseFloat(cb.value);
+      });
+
+      document.getElementById("totalFee").textContent = selectedTotal.toLocaleString();
+    }
+
+    async function makePayment() {
+      if (!currentUser || !currentUserKey) return;
+
+      const balance = parseFloat(currentUser.balance || 0);
+      if (balance < selectedTotal) {
+        alert("Insufficient balance to complete payment.");
+        return;
+      }
+
+      const selectedFees = {};
+      document.querySelectorAll('input[name="feeItem"]:checked').forEach(cb => {
+        const key = cb.getAttribute("data-key");
+        selectedFees[key] = parseFloat(cb.value);
+      });
+
+      if (Object.keys(selectedFees).length === 0) {
+        alert("Please select at least one fee to pay.");
+        return;
+      }
+
+      // Deduct balance
+      await db.ref(`unilorin-ict/users/${currentUserKey}/balance`).set(balance - selectedTotal);
+
+      // Log transaction
+      const transaction = {
+        user_id: currentUserKey,
+        type: "payment",
+	breakdown: selectedFees,
+        amount: selectedTotal/800,
+        naira_equivalent: selectedTotal,
+        date: new Date().toISOString()
+      };
+
+      await db.ref(`unilorin-ict/transactions/${currentUserKey}`).push(transaction);
+
+      alert("Payment successful!");
+      window.location.href = "dashboard.html?payment=success";
+    }
+
+    fetchUserAndFees();
+  </script>
+</body>
+</html>

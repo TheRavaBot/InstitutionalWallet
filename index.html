@@ -1,0 +1,81 @@
+<?php
+session_start();
+include 'db_connect.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$user_id = $_SESSION['user_id'];
+$stmt = $conn->prepare("SELECT name, balance FROM users WHERE id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$stmt->bind_result($name, $balance);
+$stmt->fetch();
+$stmt->close();
+
+$transactions = $conn->prepare("SELECT type, amount, naira_equivalent, date FROM transactions WHERE user_id = ? ORDER BY date DESC");
+$transactions->bind_param("i", $user_id);
+$transactions->execute();
+$result = $transactions->get_result();
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+ 
+
+  
+</head>
+<body>
+    
+    <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
+    <header class="header">
+        <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
+    </header>
+
+    <section class="page-section dashboard">
+        <div class="icon-spot">
+            <img src="icon.png" alt="Dashboard Icon" class="icon">
+        </div>
+        <h2>Welcome, <?php echo htmlspecialchars($name); ?>!</h2>
+ <div class="balance-section">
+     -Available Balance-
+            <p>Tokken: <span class="amount"><?php echo $balance/800; ?></span></p>
+            <p>Naira Equivalent: <span class="amount">₦<?php echo number_format($balance, 2); ?></span></p>
+        </div>
+    </section>
+    </header>
+    
+    <section class="page-section">
+        <h2>Transaction History</h2>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Amount(Tokken)</th>
+                    <th>Naira Equivalent</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while ($row = $result->fetch_assoc()): ?>
+                <tr>
+                    <td><?php echo ucfirst($row['type']); ?></td>
+                    <td><?php echo number_format($row['amount'], 2); ?></td>
+                    <td>₦<?php echo number_format($row['naira_equivalent'], 2); ?></td>
+                    <td><?php echo $row['date']; ?></td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </section>
+    
+   
+</body>
+</html>
