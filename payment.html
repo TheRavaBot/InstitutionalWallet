@@ -34,7 +34,19 @@
     </div>
     <p><a href="dashboard.html">← Back to Dashboard</a></p>
   </section>
-
+<script>
+ // Load sidebar.html into #sidebar-container
+  fetch('sidebar.html')
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('sidebar-container').innerHTML = data;
+      // Re-run script inside sidebar.html after it's loaded
+      const script = document.createElement("script");
+      script.src = "script.js";
+      document.body.appendChild(script);
+    })
+    .catch(error => console.error('Sidebar load error:', error));
+</script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
