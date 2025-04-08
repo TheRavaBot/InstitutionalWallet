@@ -1,3 +1,10 @@
+<!-- flutterwave test cards
+Card Type	Card Number		Expiry Date	CVV	PIN	OTP
+Verve		5061 4600 0000 0000	12/30		123	1111	12345
+Mastercard	5531 8866 5214 2950	09/32		564	3310	12345
+Visa		4084 0840 8408 4081	12/30		812	1234	12345 -->
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,14 +20,14 @@
 <body>
   <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
   <header class="header">
-    <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
+  <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
   </header>
 
   <section class="page-section dashboard">
-    <div class="icon-spot">
-      <img src="icon.png" alt="Dashboard Icon" class="icon">
-      <h2>Fund Wallet</h2>
-    </div>
+  <div class="icon-spot">
+  <img src="icon.png" alt="Dashboard Icon" class="icon">
+  <h2>Fund Wallet</h2>
+  </div>
   </section>
 
   <section class="page-section">
@@ -53,6 +60,8 @@
 </script>
 
   <script>
+	  let userPhone;
+	  let userName;
     // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
@@ -75,7 +84,10 @@
     firebase.database().ref("unilorin-ict/users/" + userId).once("value", (snapshot) => {
       const user = snapshot.val();
       if (user && user.email) {
-        document.getElementById("user_email").value = user.email;
+	      
+	      document.getElementById("user_email").value = user.email;
+	      userPhone = user.contact;
+	      userName = user.name;
       }
     });
 
@@ -105,8 +117,15 @@
         currency: "NGN",
         payment_options: "card, banktransfer, ussd",
         customer: {
-          email: userEmail
+          email: userEmail,
+	  phone_number: userPhone,   // Add phone number
+    	name: userName             // Add full name
         },
+customizations: {
+    title: "UNILORIN VIRTUAL WALLET", // Shows at top of modal
+    description: "Top-up Wallet Balance", // Optional, appears below title
+    logo: "https://institutionalwallet.vercel.app/icon.png" // Optional: logo on modal (URL to image)
+  }
         callback: function(response) {
           if (response.status === "successful") {
             fundWallet(tokenAmount, nairaAmount);
