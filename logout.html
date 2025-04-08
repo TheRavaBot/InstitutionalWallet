@@ -1,7 +1,21 @@
-<?php
-session_start();
-session_unset();
-session_destroy();
-header("Location: login.html?logout=success");
-exit();
-?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Logging Out...</title>
+  <script>
+    // Clear user session
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("name");
+    localStorage.removeItem("email");
+    localStorage.removeItem("balance");
+
+    // Redirect to login page
+    window.location.href = "login.html";
+  </script>
+</head>
+<body>
+  <p>Logging you out...</p>
+</body>
+</html>
