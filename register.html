@@ -50,7 +50,20 @@
     </form>
     <p>Already have an account? <a href="login.html">Login here</a></p>
   </section>
-
+	<div id="sidebar-container"></div>
+<script>
+ // Load sidebar.html into #sidebar-container
+  fetch('sidebar.html')
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('sidebar-container').innerHTML = data;
+      // Re-run script inside sidebar.html after it's loaded
+      const script = document.createElement("script");
+      script.src = "script.js";
+      document.body.appendChild(script);
+    })
+    .catch(error => console.error('Sidebar load error:', error));
+</script>
   <script>
 function formatDate(date) {
     const day = String(date.getDate()).padStart(2, '0');
