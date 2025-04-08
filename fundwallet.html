@@ -117,13 +117,13 @@ Visa		4084 0840 8408 4081	12/30		812	1234	12345 -->
         customer: {
           email: userEmail,
 	  // phone_number: userPhone,   // Add phone number
-   //  	name: userName             // Add full name
+    	name: userName             // Add full name
         },
-// customizations: {
-//     title: "UNILORIN VIRTUAL WALLET", // Shows at top of modal
-//     description: "Top-up Wallet Balance", // Optional, appears below title
-//     logo: "https://institutionalwallet.vercel.app/icon.png" // Optional: logo on modal (URL to image)
-//   },
+customizations: {
+    title: "UNILORIN VIRTUAL WALLET", // Shows at top of modal
+    description: "Top-up Wallet Balance", // Optional, appears below title
+    logo: "https://institutionalwallet.vercel.app/icon.png" // Optional: logo on modal (URL to image)
+  },
         callback: function(response) {
           if (response.status === "successful") {
             fundWallet(tokenAmount, nairaAmount);
