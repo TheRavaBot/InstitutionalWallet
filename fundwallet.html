@@ -11,7 +11,6 @@
   <script src="https://checkout.flutterwave.com/v3.js"></script>
 </head>
 <body>
-<div id="sidebar-container"></div>
   <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
   <header class="header">
     <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
@@ -38,20 +37,22 @@
 
     <a href="dashboard.html">Back to Dashboard</a>
   </section>
+	<div id="sidebar-container"></div>
+<script>
+ // Load sidebar.html into #sidebar-container
+  fetch('sidebar.html')
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('sidebar-container').innerHTML = data;
+      // Re-run script inside sidebar.html after it's loaded
+      const script = document.createElement("script");
+      script.src = "script.js";
+      document.body.appendChild(script);
+    })
+    .catch(error => console.error('Sidebar load error:', error));
+</script>
 
   <script>
-   // Function to load the sidebar HTML dynamically
-    function loadSidebar() {
-        fetch('sidebar.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('sidebar-container').innerHTML = data;
-            })
-            .catch(error => console.error('Error loading sidebar:', error));
-    }
-
-    // Load sidebar when the page is ready
-    window.onload = loadSidebar;
     // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
