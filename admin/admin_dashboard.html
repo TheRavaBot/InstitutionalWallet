@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal - UNILORIN</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+
+<body>
+  <div id="sidebar-container"></div>
+  <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
+  <header class="header">
+    <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
+  </header>
+
+  <div class="page-section dashboard">
+    <div class="icon-spot">
+      <img src="icon.png" alt="Admin Icon" class="icon" />
+      <h2>ADMIN DASHBOARD</h2>
+    </div>
+
+    <!-- <h1>Admin Dashboard - UNILORIN Digital Wallet</h1> -->
+
+    -SEARCH STUDENTS- <input type="text" id="searchInput" placeholder="Search by Name, Email, Matric, or Level..." />
+    <table class="history-table" id="usersTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Matric</th>
+          <th>Level</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="usersTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- User Details Modal -->
+  <div id="userModal" class="modal"> 
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2>User Details</h2>
+      <div id="userDetails"></div>
+      <h3>Transaction History</h3>
+      <div class="table-scroll">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Naira Equivalent</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="transactionDetails"></tbody>
+      </table>
+    </div>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+      authDomain: "project-iot-51262.firebaseapp.com",
+      databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+      projectId: "project-iot-51262",
+      storageBucket: "project-iot-51262.appspot.com",
+      messagingSenderId: "785303672386",
+      appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const searchInput = document.getElementById("searchInput");
+    const usersTableBody = document.getElementById("usersTableBody");
+    const userModal = document.getElementById("userModal");
+    const userDetails = document.getElementById("userDetails");
+    const transactionDetails = document.getElementById("transactionDetails");
+
+    let allUsers = [];
+
+    db.ref("unilorin-ict/users").once("value", snapshot => {
+      snapshot.forEach(child => {
+        const user = child.val();
+        user.id = child.key;
+        allUsers.push(user);
+      });
+    });
+
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value.toLowerCase();
+      usersTableBody.innerHTML = "";
+
+      const filtered = allUsers.filter(user => {
+        return (
+          user.name?.toLowerCase().includes(query) ||
+          user.email?.toLowerCase().includes(query) ||
+          user.matric?.toLowerCase().includes(query) ||
+          user.level?.toLowerCase().includes(query)
+        );
+      });
+
+      filtered.forEach(user => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${user.name || "-"}</td>
+          <td>${user.email || "-"}</td>
+          <td>${user.matric || "-"}</td>
+          <td>${user.level || "-"}</td>
+          <td><button onclick="viewDetails('${user.id}')">View Details</button></td>
+        `;
+        usersTableBody.appendChild(row);
+      });
+    });
+
+    function viewDetails(userId) {
+      db.ref("unilorin-ict/users/" + userId).once("value", snap => {
+        const user = snap.val();
+        userDetails.innerHTML = `
+          <p><strong>Name:</strong> ${user.name}</p>
+          <p><strong>Email:</strong> ${user.email}</p>
+          <p><strong>Matric:</strong> ${user.matric}</p>
+          <p><strong>Level:</strong> ${user.level}</p>
+          <p><strong>Contact:</strong> ${user.contact}</p>
+          <p><strong>Balance:</strong> ₦${parseFloat(user.balance || 0).toFixed(2)}</p>
+        `;
+      });
+
+      db.ref("unilorin-ict/transactions/" + userId).orderByChild("date").once("value", snap => {
+        transactionDetails.innerHTML = "";
+        const transactions = [];
+
+        snap.forEach(child => {
+          const txn = child.val();
+          transactions.push(txn);
+        });
+
+        if (transactions.length === 0) {
+          transactionDetails.innerHTML = "<tr><td colspan='4'>No transactions found.</td></tr>";
+        } else {
+          transactions.reverse().forEach(txn => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+        <td>${capitalize(txn.type)}</td>
+        <td>${parseFloat(txn.amount).toFixed(2)}</td>
+        <td>₦${parseFloat(txn.naira_equivalent).toFixed(2)}</td>
+        <td>${new Date(txn.date).toLocaleString()}</td>
+      `;
+            transactionDetails.appendChild(tr);
+          });
+        }
+      });
+
+      userModal.style.display = "block";
+    }
+
+    function capitalize(text) {
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function closeModal() {
+      userModal.style.display = "none";
+    }
+  </script>
+
+</body>
+
+</html>

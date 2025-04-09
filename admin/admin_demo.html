@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Portal - UNILORIN</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+  <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
+  <header class="header">
+    <h1 class="headerc">Admin Portal - University Of Ilorin</h1>
+  </header>
+
+  <section class="page-section dashboard">
+    <div class="icon-spot">
+      <img src="icon.png" alt="Admin Icon" class="icon" />
+      <h2>ADMIN LOGIN</h2>
+    </div>
+
+    <form id="loginForm" autocomplete="off">
+      <label for="email">Email:</label>
+      <input type="email" id="email" required autocomplete="off" />
+
+      <label for="password">Password:</label>
+      <input
+        type="password"
+        id="password"
+        required
+        autocomplete="new-password"
+        onfocus="this.setAttribute('readonly', 'readonly'); 	this.removeAttribute('readonly');"
+      />
+
+      <button type="submit" class="btn">Login</button>
+    </form>
+
+    <p>Back to <a href="index.html">Home</a></p>
+  </section>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+      authDomain: "project-iot-51262.firebaseapp.com",
+      databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+      projectId: "project-iot-51262",
+      storageBucket: "project-iot-51262.appspot.com",
+      messagingSenderId: "785303672386",
+      appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const password = document.getElementById("password").value.trim();
+
+      const adminRef = db.ref("unilorin-ict/admin");
+      let found = false;
+
+      adminRef.once("value", (snapshot) => {
+        snapshot.forEach((childSnap) => {
+          const admin = childSnap.val();
+          if (admin.email.toLowerCase() === email && admin.password === password) {
+            found = true;
+            localStorage.setItem("admin_id", childSnap.key);
+            localStorage.setItem("admin_name", admin.name);
+            localStorage.setItem("admin_email", admin.email);
+            window.location.href = "admin_dashboard.html";
+          }
+        });
+
+        if (!found) {
+          alert("Invalid email or password");
+        }
+      });
+    });
+  </script>
+</body>
+</html>
