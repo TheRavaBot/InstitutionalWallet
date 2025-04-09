@@ -14,7 +14,6 @@
 
 </head>
 <body>
-
 <div id="sidebar-container"></div>
 <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
 <header class="header">
@@ -44,11 +43,13 @@
   // Load sidebar
 // Load sidebar.html into #sidebar-container
   fetch('admin_sidebar.html')
-    .then(response => response.text())
-    .then(data => {
-      document.getElementById('sidebar-container').innerHTML = data;
-    })
-    .catch(error => console.error('Error loading sidebar:', error));
+ .then(data => {
+  document.getElementById('sidebar-container').innerHTML = data;
+  console.log("Sidebar loaded successfully.");
+})
+.catch(error => {
+  console.error('Error loading sidebar:', error);
+});
 
 
   // Firebase setup
