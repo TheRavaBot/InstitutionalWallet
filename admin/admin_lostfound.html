@@ -35,6 +35,7 @@
     <label>Matric Number: <input type="text" id="matric" required></label><br>
     <label>Found Date: <input type="date" id="foundDate" required></label><br>
     <label>Status: <input type="text" value="Unclaimed" id="status" disabled></label><br>
+    <label>Item Name: <input type="text" id="iname" required></label><br>
     <label>Item Description: <input type="text" id="description" required></label><br>
     <label>Upload Image: <input type="file" id="imageInput" accept="image/*" required></label><br><br>
     <button type="submit">Submit</button>
@@ -44,6 +45,18 @@
 </section>
 
 <script>
+      fetch('admin_sidebar.html')
+  .then(response => response.text())
+  .then(data => {
+    document.getElementById('sidebar-container').innerHTML = data;
+
+    // Re-append script.js manually so toggleSidebar() becomes available
+    const script = document.createElement("script");
+    script.src = "script.js";
+    document.body.appendChild(script);
+  })
+  .catch(error => console.error('Error loading sidebar:', error));
+
   // Firebase setup
   const firebaseConfig = {
     apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
@@ -71,7 +84,7 @@
     imgurAccessToken = "cd45b62c7b1b6ab1a6a241613d6a7a704e23939b"; // Replace with your OAuth access token from Imgur
 
     // Once authenticated, you can allow users to upload images
-    alert("Authenticated successfully!");
+   // alert("Authenticated successfully!");
   }
 authenticateWithImgur();
   document.getElementById("lostFoundForm").addEventListener("submit", async (e) => {
@@ -80,6 +93,7 @@ authenticateWithImgur();
     const email = document.getElementById("email").value;
     const matric = document.getElementById("matric").value;
     const foundDate = document.getElementById("foundDate").value;
+    const iname = document.getElementById("iname").value;        
     const description = document.getElementById("description").value;    
     const status = "Unclaimed";
     const imageFile = document.getElementById("imageInput").files[0];
@@ -93,7 +107,7 @@ authenticateWithImgur();
     const imageName = `founditems/${Date.now()}_${imageFile.name}`;
     const imageRef = storage.ref(imageName);
     
-    uploadStatus.innerText = "Uploading image...";
+    uploadStatus.innerText = "Uploading Item wait...";
 
     try {
       // Compress image before upload (optional)
@@ -121,6 +135,7 @@ authenticateWithImgur();
                 matric: matric,
                 found_date: foundDate,
                 status: status,
+                item_name: iname,                                
                 item_description: description,                
                 image_url: imageUrl,
               });
