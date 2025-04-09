@@ -10,7 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
-<!--   <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
 
 </head>
 <body>
@@ -40,16 +40,18 @@
 </section>
 
 <script>
-  // Load sidebar
-// Load sidebar.html into #sidebar-container
-  fetch('admin_sidebar.html')
- .then(data => {
-  document.getElementById('sidebar-container').innerHTML = data;
-  console.log("Sidebar loaded successfully.");
-})
-.catch(error => {
-  console.error('Error loading sidebar:', error);
-});
+fetch('admin_sidebar.html')
+  .then(response => response.text())
+  .then(data => {
+    document.getElementById('sidebar-container').innerHTML = data;
+
+    // Re-append script.js manually so toggleSidebar() becomes available
+    const script = document.createElement("script");
+    script.src = "script.js";
+    document.body.appendChild(script);
+  })
+  .catch(error => console.error('Error loading sidebar:', error));
+
 
 
   // Firebase setup
