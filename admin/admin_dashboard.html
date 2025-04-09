@@ -66,6 +66,18 @@
   </div>
 
   <script>
+    fetch('admin_sidebar.html')
+  .then(response => response.text())
+  .then(data => {
+    document.getElementById('sidebar-container').innerHTML = data;
+
+    // Re-append script.js manually so toggleSidebar() becomes available
+    const script = document.createElement("script");
+    script.src = "script.js";
+    document.body.appendChild(script);
+  })
+  .catch(error => console.error('Error loading sidebar:', error));
+
     const firebaseConfig = {
       apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
       authDomain: "project-iot-51262.firebaseapp.com",
