@@ -1,57 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lost & Found</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal - UNILORIN</title>
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
-
 </head>
+
 <body>
-
-<div id="sidebar-container"></div>
-<span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
-<header class="header">
-  <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
-</header>
-
-<section class="page-section dashboard">
+  <div id="sidebar-container"></div>
+  <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
+  <header class="header">
+    <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
+  </header>
+<!-- Add this inside your body tag after the existing sidebar and header -->
+<div class="page-section dashboard">
   <div class="icon-spot">
-    <img src="icon.png" alt="Dashboard Icon" class="icon">
+    <img src="icon.png" alt="Admin Icon" class="icon" />
+    <h2>Lost & Found Items</h2>
   </div>
-  <h2>Lost & Found Submission</h2>
 
-  <form id="lostFoundForm">
-    <label>Founder's Name: <input type="text" id="founderName" required></label><br>
-    <label>Email: <input type="email" id="email" required></label><br>
-    <label>Matric Number: <input type="text" id="matric" required></label><br>
-    <label>Found Date: <input type="date" id="foundDate" required></label><br>
-    <label>Status: <input type="text" value="Unclaimed" id="status" disabled></label><br>
-    <label>Upload Image: <input type="file" id="imageInput" accept="image/*" required></label><br><br>
-    <button type="submit">Submit</button>
-  </form>
+  <input type="text" id="searchInput" placeholder="Search by Name, Email, Matric, or Description..." />
+  <table class="history-table" id="lostItemsTable">
+    <thead>
+      <tr>
+        <th>Founder's Name</th>
+        <th>Email</th>
+        <th>Matric</th>
+        <th>Found Date</th>
+        <th>Item Name</th>
+        <th>Item Description</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="lostItemsBody"></tbody>
+  </table>
+</div>
 
-  <p id="uploadStatus"></p>
-</section>
+<!-- Image Modal -->
+<div id="imageModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeImageModal()">&times;</span>
+    <img id="modalImage" src="" alt="Item Image" style="width:100%; border-radius:10px;">
+  </div>
+</div>
 
 <script>
-  // Load sidebar
-  fetch('sidebar.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('sidebar-container').innerHTML = html;
-      const script = document.createElement("script");
-      script.src = "script.js";
-      document.body.appendChild(script);
-    });
+   fetch('admin_sidebar.html')
+  .then(response => response.text())
+  .then(data => {
+    document.getElementById('sidebar-container').innerHTML = data;
 
-  // Firebase setup
+    // Re-append script.js manually so toggleSidebar() becomes available
+    const script = document.createElement("script");
+    script.src = "script.js";
+    document.body.appendChild(script);
+  })
+  .catch(error => console.error('Error loading sidebar:', error));
+
   const firebaseConfig = {
     apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
     authDomain: "project-iot-51262.firebaseapp.com",
@@ -61,134 +73,69 @@
     messagingSenderId: "785303672386",
     appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
   };
+
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-  const storage = firebase.storage();
 
-//   document.getElementById("lostFoundForm").addEventListener("submit", async (e) => {
-//     e.preventDefault();
-//     const name = document.getElementById("founderName").value;
-//     const email = document.getElementById("email").value;
-//     const matric = document.getElementById("matric").value;
-//     const foundDate = document.getElementById("foundDate").value;
-//     const status = "Unclaimed";
-//     const imageFile = document.getElementById("imageInput").files[0];
-//     const uploadStatus = document.getElementById("uploadStatus");
+  const searchInput = document.getElementById("searchInput");
+  const lostItemsBody = document.getElementById("lostItemsBody");
+  const modalImage = document.getElementById("modalImage");
+  const imageModal = document.getElementById("imageModal");
 
+  let lostItems = [];
 
-//     if (!imageFile) {
-//       alert("Please select an image.");
-//       return;
-//     }
-
-//     const imageName = `founditems/${Date.now()}_${imageFile.name}`;
-//     const imageRef = storage.ref(imageName);
-
-//     uploadStatus.innerText = "Uploading image...";
-
-//     try {
-//       const snapshot = await imageRef.put(imageFile);
-//       const imageUrl = await snapshot.ref.getDownloadURL();
-
-//       const newItemRef = db.ref("unilorin-ict/founditems").push();
-//       await newItemRef.set({
-//         founder_name: name,
-//         email: email,
-//         matric: matric,
-//         found_date: foundDate,
-//         status: status,
-//         image_url: imageUrl
-//       });
-
-//       uploadStatus.innerText = "Item submitted successfully!";
-//       document.getElementById("lostFoundForm").reset();
-//     } catch (err) {
-//       console.error(err);
-//       uploadStatus.innerText = "Error uploading item.";
-//     }
-//   });
-
-let selectedCompressedFile = null;
-
-document.getElementById("itemImage").addEventListener("change", function (e) {
-  const imageFile = e.target.files[0];
-
-  if (!imageFile) return;
-
-  // Validate file size (original)
-  if (imageFile.size > 10 * 1024 * 1024) {
-    alert("Image too large! Please select an image below 10MB.");
-    return;
-  }
-
-  // Compress image using Compressor.js
-  new Compressor(imageFile, {
-    quality: 0.6, // 0 = max compression, 1 = no compression
-    maxWidth: 800,
-    maxHeight: 800,
-    success(result) {
-      selectedCompressedFile = result;
-      console.log("Image compressed:", result.size / 1024, "KB");
-    },
-    error(err) {
-      console.error("Compression error:", err.message);
-      alert("Failed to compress image.");
-    },
+  // Load all found items
+  db.ref("unilorin-ict/founditems").once("value", snapshot => {
+    snapshot.forEach(child => {
+      const item = child.val();
+      item.id = child.key;
+      lostItems.push(item);
+    });
+    displayLostItems(lostItems);
   });
-});
 
-document.getElementById("lostFoundForm").addEventListener("submit", function (e) {
-  e.preventDefault();
-
-  // get form data
-  const founder_name = document.getElementById("founderName").value;
-  const email = document.getElementById("email").value;
-  const matric = document.getElementById("matric").value;
-  const found_date = document.getElementById("foundDate").value;
-
-  if (!selectedCompressedFile) {
-    alert("Please select and wait for image compression.");
-    return;
+  // Display items in table
+  function displayLostItems(items) {
+    lostItemsBody.innerHTML = "";
+    items.forEach(item => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${item.founder_name || "-"}</td>
+        <td>${item.email || "-"}</td>
+        <td>${item.matric || "-"}</td>
+        <td>${item.found_date || "-"}</td>
+        <td>${item.item_name || "-"}</td>
+        <td>${item.item_description || "-"}</td>
+        <td>${item.status || "-"}</td>
+        <td><button onclick="viewImage('${item.image_url}')">View Image</button></td>
+      `;
+      lostItemsBody.appendChild(row);
+    });
   }
 
-  const timestamp = Date.now();
-  const filePath = "founditems/images/" + timestamp + "_" + selectedCompressedFile.name;
+  // Filter items on search
+  searchInput.addEventListener("input", () => {
+    const query = searchInput.value.toLowerCase();
+    const filtered = lostItems.filter(item =>
+      item.founder_name?.toLowerCase().includes(query) ||
+      item.email?.toLowerCase().includes(query) ||
+      item.matric?.toLowerCase().includes(query) ||
+      item.item_description?.toLowerCase().includes(query) ||
+      item.item_name?.toLowerCase().includes(query)
+    );
+    displayLostItems(filtered);
+  });
 
-  const storageRef = firebase.storage().ref(filePath);
-  const uploadTask = storageRef.put(selectedCompressedFile);
+  function viewImage(url) {
+    modalImage.src = url;
+    imageModal.style.display = "block";
+  }
 
-  uploadTask.on("state_changed",
-    null,
-    function (error) {
-      console.error("Upload error:", error);
-      alert("Image upload failed.");
-    },
-    function () {
-      uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
-        const data = {
-          founder_name,
-          email,
-          matric,
-          found_date,
-          status: "unclaimed",
-          imageUrl: downloadURL
-        };
-
-        firebase.database().ref("unilorin-ict/founditems").push(data)
-          .then(() => {
-            alert("Item successfully submitted!");
-            document.getElementById("lostFoundForm").reset();
-            selectedCompressedFile = null;
-          })
-          .catch(err => {
-            console.error("DB error:", err);
-            alert("Failed to save item.");
-          });
-      });
-    }
-  );
-});
+  function closeImageModal() {
+    imageModal.style.display = "none";
+  }
 </script>
 
 </body>
+
 </html>
