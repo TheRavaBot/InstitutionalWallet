@@ -42,14 +42,14 @@
 
 <script>
   // Load sidebar
+// Load sidebar.html into #sidebar-container
   fetch('sidebar.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('sidebar-container').innerHTML = html;
-      const script = document.createElement("script");
-      script.src = "script.js";
-      document.body.appendChild(script);
-    });
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('sidebar-container').innerHTML = data;
+    })
+    .catch(error => console.error('Error loading sidebar:', error));
+
 
   // Firebase setup
   const firebaseConfig = {
