@@ -9,8 +9,10 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
 
-  <!-- Imgur API -->
+  <!-- Imgur OAuth SDK -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
@@ -41,16 +43,6 @@
 </section>
 
 <script>
-  // Load sidebar
-  fetch('sidebar.html')
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById('sidebar-container').innerHTML = html;
-      const script = document.createElement("script");
-      script.src = "script.js";
-      document.body.appendChild(script);
-    });
-
   // Firebase setup
   const firebaseConfig = {
     apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
@@ -63,6 +55,23 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
+  const storage = firebase.storage();
+
+  const imgurClientId = "69f643239db57dc"; // Replace with your Imgur client ID
+  const imgurApiUrl = "https://api.imgur.com/3/upload";
+
+  // OAuth flow (If the user is authenticated)
+  let imgurAccessToken = null;
+
+  // Example function to authenticate the user and get the access token
+  function authenticateWithImgur() {
+    // Ideally, this should open an OAuth flow to authenticate with Imgur
+    // For now, we're simulating it with a pre-obtained access token
+    imgurAccessToken = "cd45b62c7b1b6ab1a6a241613d6a7a704e23939b"; // Replace with your OAuth access token from Imgur
+
+    // Once authenticated, you can allow users to upload images
+    alert("Authenticated successfully!");
+  }
 
   document.getElementById("lostFoundForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -79,35 +88,55 @@
       return;
     }
 
-    const formData = new FormData();
-    formData.append('image', imageFile);
+    const imageName = `founditems/${Date.now()}_${imageFile.name}`;
+    const imageRef = storage.ref(imageName);
 
-    uploadStatus.innerText = "Uploading image to Imgur...";
+    uploadStatus.innerText = "Uploading image...";
 
     try {
-      const imgurResponse = await axios.post('https://api.imgur.com/3/image', formData, {
-        headers: {
-          Authorization: '69f643239db57dc'
-        }
+      // Compress image before upload (optional)
+      new Compressor(imageFile, {
+        quality: 0.8,
+        success: async (compressedImage) => {
+          try {
+            // Upload the image to Imgur (via OAuth)
+            const formData = new FormData();
+            formData.append("image", compressedImage);
+
+            const response = await axios.post(imgurApiUrl, formData, {
+              headers: {
+                Authorization: `Bearer ${imgurAccessToken}`,
+              },
+            });
+
+            if (response.data.success) {
+              const imageUrl = response.data.data.link;
+
+              // Save item details in Firebase with the Imgur URL
+              const newItemRef = db.ref("unilorin-ict/founditems").push();
+              await newItemRef.set({
+                founder_name: name,
+                email: email,
+                matric: matric,
+                found_date: foundDate,
+                status: status,
+                image_url: imageUrl,
+              });
+
+              uploadStatus.innerText = "Item submitted successfully!";
+              document.getElementById("lostFoundForm").reset();
+            } else {
+              uploadStatus.innerText = "Error uploading image to Imgur.";
+            }
+          } catch (err) {
+            console.error(err);
+            uploadStatus.innerText = "Error uploading image.";
+          }
+        },
       });
-
-      const imageUrl = imgurResponse.data.data.link;  // Image URL from Imgur API
-
-      const newItemRef = db.ref("unilorin-ict/founditems").push();
-      await newItemRef.set({
-        founder_name: name,
-        email: email,
-        matric: matric,
-        found_date: foundDate,
-        status: status,
-        image_url: imageUrl
-      });
-
-      uploadStatus.innerText = "Item submitted successfully!";
-      document.getElementById("lostFoundForm").reset();
     } catch (err) {
       console.error(err);
-      uploadStatus.innerText = "Error uploading item.";
+      uploadStatus.innerText = "Error during submission.";
     }
   });
 </script>
