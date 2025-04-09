@@ -35,6 +35,7 @@
     <label>Matric Number: <input type="text" id="matric" required></label><br>
     <label>Found Date: <input type="date" id="foundDate" required></label><br>
     <label>Status: <input type="text" value="Unclaimed" id="status" disabled></label><br>
+    <label>Item Description: <input type="text" id="description" required></label><br>
     <label>Upload Image: <input type="file" id="imageInput" accept="image/*" required></label><br><br>
     <button type="submit">Submit</button>
   </form>
@@ -79,6 +80,7 @@ authenticateWithImgur();
     const email = document.getElementById("email").value;
     const matric = document.getElementById("matric").value;
     const foundDate = document.getElementById("foundDate").value;
+    const description = document.getElementById("description").value;    
     const status = "Unclaimed";
     const imageFile = document.getElementById("imageInput").files[0];
     const uploadStatus = document.getElementById("uploadStatus");
@@ -119,6 +121,7 @@ authenticateWithImgur();
                 matric: matric,
                 found_date: foundDate,
                 status: status,
+                item_description: description,                
                 image_url: imageUrl,
               });
 
