@@ -1,115 +1,218 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lost & Found</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal - UNILORIN</title>
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
-
 </head>
+
 <body>
-<div id="sidebar-container"></div>
-<span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
-<header class="header">
-  <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
-</header>
+  <div id="sidebar-container"></div>
+  <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
+  <header class="header">
+    <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
+  </header>
 
-<section class="page-section dashboard">
-  <div class="icon-spot">
-    <img src="icon.png" alt="Dashboard Icon" class="icon">
+  <div class="page-section dashboard">
+    <div class="icon-spot">
+      <img src="icon.png" alt="Admin Icon" class="icon" />
+      <h2>ADMIN DASHBOARD</h2>
+    </div>
+
+    -SEARCH STUDENTS- <input type="text" id="searchInput" placeholder="Search by Name, Email, Matric, or Level..." />
+    <table class="history-table" id="usersTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Matric</th>
+          <th>Level</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="usersTableBody"></tbody>
+    </table>
   </div>
-  <h2>Lost & Found Submission</h2>
 
-  <form id="lostFoundForm">
-    <label>Founder's Name: <input type="text" id="founderName" required></label><br>
-    <label>Email: <input type="email" id="email" required></label><br>
-    <label>Matric Number: <input type="text" id="matric" required></label><br>
-    <label>Found Date: <input type="date" id="foundDate" required></label><br>
-    <label>Status: <input type="text" value="Unclaimed" id="status" disabled></label><br>
-    <label>Upload Image: <input type="file" id="imageInput" accept="image/*" required></label><br><br>
-    <button type="submit">Submit</button>
-  </form>
+  <!-- User Details Modal -->
+  <div id="userModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2>User Details</h2>
+      <div id="userDetails"></div>
+      <h3>Transaction History</h3>
+      <div class="table-scroll">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Naira Equivalent</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="transactionDetails"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-  <p id="uploadStatus"></p>
-</section>
+  <input type="file" id="fileInput" />
+  <button onclick="uploadImage()">Upload Image</button>
+  <div id="uploadedImage">
+    <img id="imagePreview" src="" alt="Uploaded Image" style="max-width: 300px;" />
+  </div>
 
-<script>
-fetch('admin_sidebar.html')
-  .then(response => response.text())
-  .then(data => {
-    document.getElementById('sidebar-container').innerHTML = data;
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+      authDomain: "project-iot-51262.firebaseapp.com",
+      databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+      projectId: "project-iot-51262",
+      storageBucket: "project-iot-51262.appspot.com",
+      messagingSenderId: "785303672386",
+      appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+    };
 
-    // Re-append script.js manually so toggleSidebar() becomes available
-    const script = document.createElement("script");
-    script.src = "script.js";
-    document.body.appendChild(script);
-  })
-  .catch(error => console.error('Error loading sidebar:', error));
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
+    const searchInput = document.getElementById("searchInput");
+    const usersTableBody = document.getElementById("usersTableBody");
+    const userModal = document.getElementById("userModal");
+    const userDetails = document.getElementById("userDetails");
+    const transactionDetails = document.getElementById("transactionDetails");
 
+    let allUsers = [];
 
-  // Firebase setup
-  const firebaseConfig = {
-    apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
-    authDomain: "project-iot-51262.firebaseapp.com",
-    databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
-    projectId: "project-iot-51262",
-    storageBucket: "project-iot-51262.appspot.com",
-    messagingSenderId: "785303672386",
-    appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const storage = firebase.storage();
+    db.ref("unilorin-ict/users").once("value", snapshot => {
+      snapshot.forEach(child => {
+        const user = child.val();
+        user.id = child.key;
+        allUsers.push(user);
+      });
+    });
 
-  document.getElementById("lostFoundForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("founderName").value;
-    const email = document.getElementById("email").value;
-    const matric = document.getElementById("matric").value;
-    const foundDate = document.getElementById("foundDate").value;
-    const status = "Unclaimed";
-    const imageFile = document.getElementById("imageInput").files[0];
-    const uploadStatus = document.getElementById("uploadStatus");
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value.toLowerCase();
+      usersTableBody.innerHTML = "";
 
-    if (!imageFile) {
-      alert("Please select an image.");
-      return;
-    }
-
-    const imageName = `founditems/${Date.now()}_${imageFile.name}`;
-    const imageRef = storage.ref(imageName);
-
-    uploadStatus.innerText = "Uploading image...";
-
-    try {
-      const snapshot = await imageRef.put(imageFile);
-      const imageUrl = await snapshot.ref.getDownloadURL();
-
-      const newItemRef = db.ref("unilorin-ict/founditems").push();
-      await newItemRef.set({
-        founder_name: name,
-        email: email,
-        matric: matric,
-        found_date: foundDate,
-        status: status,
-        image_url: imageUrl
+      const filtered = allUsers.filter(user => {
+        return (
+          user.name?.toLowerCase().includes(query) ||
+          user.email?.toLowerCase().includes(query) ||
+          user.matric?.toLowerCase().includes(query) ||
+          user.level?.toLowerCase().includes(query)
+        );
       });
 
-      uploadStatus.innerText = "Item submitted successfully!";
-      document.getElementById("lostFoundForm").reset();
-    } catch (err) {
-      console.error(err);
-      uploadStatus.innerText = "Error uploading item.";
+      filtered.forEach(user => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${user.name || "-"}</td>
+          <td>${user.email || "-"}</td>
+          <td>${user.matric || "-"}</td>
+          <td>${user.level || "-"}</td>
+          <td><button onclick="viewDetails('${user.id}')">View Details</button></td>
+        `;
+        usersTableBody.appendChild(row);
+      });
+    });
+
+    function viewDetails(userId) {
+      db.ref("unilorin-ict/users/" + userId).once("value", snap => {
+        const user = snap.val();
+        userDetails.innerHTML = `
+          <p><strong>Name:</strong> ${user.name}</p>
+          <p><strong>Email:</strong> ${user.email}</p>
+          <p><strong>Matric:</strong> ${user.matric}</p>
+          <p><strong>Level:</strong> ${user.level}</p>
+          <p><strong>Contact:</strong> ${user.contact}</p>
+          <p><strong>Balance:</strong> ₦${parseFloat(user.balance || 0).toFixed(2)}</p>
+        `;
+      });
+
+      db.ref("unilorin-ict/transactions/" + userId).orderByChild("date").once("value", snap => {
+        transactionDetails.innerHTML = "";
+        const transactions = [];
+
+        snap.forEach(child => {
+          const txn = child.val();
+          transactions.push(txn);
+        });
+
+        if (transactions.length === 0) {
+          transactionDetails.innerHTML = "<tr><td colspan='4'>No transactions found.</td></tr>";
+        } else {
+          transactions.reverse().forEach(txn => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${capitalize(txn.type)}</td>
+              <td>${parseFloat(txn.amount).toFixed(2)}</td>
+              <td>₦${parseFloat(txn.naira_equivalent).toFixed(2)}</td>
+              <td>${new Date(txn.date).toLocaleString()}</td>
+            `;
+            transactionDetails.appendChild(tr);
+          });
+        }
+      });
+
+      userModal.style.display = "block";
     }
-  });
-</script>
+
+    function capitalize(text) {
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function closeModal() {
+      userModal.style.display = "none";
+    }
+
+    // Function to upload image to Imgur
+    function uploadImage() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("Please select an image to upload.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      // Imgur API endpoint and client ID (replace with your own client ID)
+      const clientId = '69f643239db57dc';
+      const url = 'https://api.imgur.com/3/image';
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Client-ID ' + clientId
+        },
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('imagePreview').src = data.data.link;
+        } else {
+          alert("Error uploading image: " + data.data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert("An error occurred while uploading the image.");
+      });
+    }
+  </script>
 
 </body>
+
 </html>
