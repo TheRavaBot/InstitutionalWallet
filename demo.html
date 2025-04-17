@@ -90,7 +90,8 @@
     let lostItems = [];
     let selectedItem = null;
 
-    const currentUserMatric = "user123"; // Replace with actual logged-in user's matric number
+    // const currentUserMatric = "user123"; // Replace with actual logged-in user's matric number
+    const currentUserMatric = localStorage.getItem("matric");
 
     // Load all found items
     db.ref("unilorin-ict/founditems").once("value", snapshot => {
