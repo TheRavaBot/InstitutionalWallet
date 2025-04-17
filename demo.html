@@ -55,144 +55,139 @@
     </div>
   </div>
 
-  <script>
-    fetch('sidebar.html')
-      .then(response => response.text())
-      .then(data => {
-        document.getElementById('sidebar-container').innerHTML = data;
-        const script = document.createElement("script");
-        script.src = "script.js";
-        document.body.appendChild(script);
-      })
-      .catch(error => console.error('Error loading sidebar:', error));
+ <script>
+  fetch('sidebar.html')
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('sidebar-container').innerHTML = data;
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
-      authDomain: "project-iot-51262.firebaseapp.com",
-      databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
-      projectId: "project-iot-51262",
-      storageBucket: "project-iot-51262.appspot.com",
-      messagingSenderId: "785303672386",
-      appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
-    };
+      const script = document.createElement("script");
+      script.src = "script.js";
+      document.body.appendChild(script);
+    })
+    .catch(error => console.error('Error loading sidebar:', error));
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+    authDomain: "project-iot-51262.firebaseapp.com",
+    databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+    projectId: "project-iot-51262",
+    storageBucket: "project-iot-51262.appspot.com",
+    messagingSenderId: "785303672386",
+    appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+  };
 
-    const searchInput = document.getElementById("searchInput");
-    const lostItemsBody = document.getElementById("lostItemsBody");
-    const modalImage = document.getElementById("modalImage");
-    const imageModal = document.getElementById("imageModal");
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-    const claimModal = document.getElementById("claimModal");
-    const claimText = document.getElementById("claimText");
+  const searchInput = document.getElementById("searchInput");
+  const lostItemsBody = document.getElementById("lostItemsBody");
+  const modalImage = document.getElementById("modalImage");
+  const imageModal = document.getElementById("imageModal");
 
-    let lostItems = [];
-    let selectedItem = null;
+  let lostItems = [];
 
-    // const currentUserMatric = "user123"; // Replace with actual logged-in user's matric number
-    const currentUserMatric = localStorage.getItem("matric");
-
-    // Load all found items
-    db.ref("unilorin-ict/founditems").once("value", snapshot => {
-      snapshot.forEach(child => {
-        const item = child.val();
-        item.id = child.key;
-        lostItems.push(item);
-      });
-      displayLostItems(lostItems);
+  // Load all found items
+  db.ref("unilorin-ict/founditems").once("value", snapshot => {
+    snapshot.forEach(child => {
+      const item = child.val();
+      item.id = child.key;
+      lostItems.push(item);
     });
+    displayLostItems(lostItems);
+  });
 
-    function displayLostItems(items) {
-      lostItemsBody.innerHTML = "";
-      items.forEach(item => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${item.founder_name || "-"}</td>
-          <td>${item.item_name || "-"}</td>
-          <td>${item.item_description || "-"}</td>
-          <td>${item.status || "-"}</td>
-          <td>
-            <button onclick="viewImage('${item.image_url}')">View Image</button> ||
-            <button onclick="claimitem('${item.id}')">Claim Item</button>
-          </td>
-        `;
-        lostItemsBody.appendChild(row);
-      });
-    }
-
-    searchInput.addEventListener("input", () => {
-      const query = searchInput.value.toLowerCase();
-      const filtered = lostItems.filter(item =>
-        item.founder_name?.toLowerCase().includes(query) ||
-        item.item_description?.toLowerCase().includes(query) ||
-        item.item_name?.toLowerCase().includes(query)
-      );
-      displayLostItems(filtered);
+  // Display items in table
+  function displayLostItems(items) {
+    lostItemsBody.innerHTML = "";
+    items.forEach(item => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${item.founder_name || "-"}</td>
+        <td>${item.item_name || "-"}</td>
+        <td>${item.item_description || "-"}</td>
+        <td>${item.status || "-"}</td>
+        <td>
+          <button onclick="viewImage('${item.image_url}')">View Image</button>
+          ${item.status !== "claimed" ? `|| <button onclick="claimItem('${item.id}', '${item.matric}', '${item.founder_name}')">Claim Item</button>` : ""}
+        </td>
+      `;
+      lostItemsBody.appendChild(row);
     });
+  }
 
-    function viewImage(url) {
-      modalImage.src = url;
-      imageModal.style.display = "block";
-    }
+  // Filter items on search
+  searchInput.addEventListener("input", () => {
+    const query = searchInput.value.toLowerCase();
+    const filtered = lostItems.filter(item =>
+      item.founder_name?.toLowerCase().includes(query) ||
+      item.item_description?.toLowerCase().includes(query) ||
+      item.item_name?.toLowerCase().includes(query)
+    );
+    displayLostItems(filtered);
+  });
 
-    function closeImageModal() {
-      imageModal.style.display = "none";
-    }
+  function viewImage(url) {
+    modalImage.src = url;
+    imageModal.style.display = "block";
+  }
 
-    function claimitem(itemId) {
-      selectedItem = lostItems.find(i => i.id === itemId);
-      if (!selectedItem) return;
-      claimText.textContent = `Make payment of ₦1000 to the founder (${selectedItem.founder_name})?`;
-      claimModal.style.display = "block";
-    }
+  function closeImageModal() {
+    imageModal.style.display = "none";
+  }
 
-    function closeClaimModal() {
-      claimModal.style.display = "none";
-      selectedItem = null;
-    }
+  function claimItem(itemId, founderMatric, founderName) {
+    const userMatric = localStorage.getItem("matric");
+    if (!userMatric) return alert("User not logged in");
 
-    function confirmClaim() {
-      if (!selectedItem) return;
+    if (confirm(`Make payment of ₦1000 to the founder (${founderName})?`)) {
+      const usersRef = db.ref("unilorin-ict/users");
 
-      const itemRef = db.ref("unilorin-ict/founditems/" + selectedItem.id);
+      usersRef.once("value", snapshot => {
+        let currentUserKey = null;
+        let founderKey = null;
+        let currentUser = null;
+        let founderUser = null;
 
-      const founderMatric = selectedItem.founder_matric;
-      const userRef = db.ref("unilorin-ict/users/" + currentUserMatric);
-      const founderRef = db.ref("unilorin-ict/users/" + founderMatric);
+        snapshot.forEach(child => {
+          const user = child.val();
+          if (user.matric === userMatric) {
+            currentUser = user;
+            currentUserKey = child.key;
+          }
+          if (user.matric === founderMatric) {
+            founderUser = user;
+            founderKey = child.key;
+          }
+        });
 
-      Promise.all([userRef.once("value"), founderRef.once("value")]).then(([userSnap, founderSnap]) => {
-        const user = userSnap.val();
-        const founder = founderSnap.val();
-
-        if (!user || user.balance < 1000) {
-          alert("Insufficient balance.");
-          closeClaimModal();
+        if (!currentUser || !founderUser) {
+          alert("User or founder not found.");
           return;
         }
 
-        const updates = {};
-        updates[`unilorin-ict/users/${currentUserMatric}/balance`] = user.balance - 1000;
-
-        if (founder) {
-          updates[`unilorin-ict/users/${founderMatric}/balance`] = (founder.balance || 0) + 1000;
+        if (currentUser.balance < 1000) {
+          alert("Insufficient balance.");
+          return;
         }
 
-        updates[`unilorin-ict/founditems/${selectedItem.id}/status`] = "claimed";
+        // Update balances
+        const newUserBalance = currentUser.balance - 1000;
+        const newFounderBalance = founderUser.balance + 1000;
 
-        db.ref().update(updates).then(() => {
-          alert("Item successfully claimed!");
-          selectedItem.status = "claimed";
-          displayLostItems(lostItems);
-          closeClaimModal();
-        }).catch(err => {
-          console.error("Error processing claim:", err);
-          alert("Error processing claim.");
-          closeClaimModal();
-        });
+        usersRef.child(currentUserKey).update({ balance: newUserBalance });
+        usersRef.child(founderKey).update({ balance: newFounderBalance });
+
+        // Mark item as claimed
+        db.ref("unilorin-ict/founditems").child(itemId).update({ status: "claimed" });
+
+        alert("Payment successful. Item marked as claimed.");
+        location.reload();
       });
     }
-  </script>
+  }
+</script>
+
 
   <style>
     .modal {
