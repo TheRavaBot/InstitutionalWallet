@@ -172,10 +172,12 @@
           }
 
           const timestamp = new Date().toISOString();
-
+          const amnt = 1.25;
+          const nqui = 1000;
           // Build transaction data
           const claimerTxn = {
-            amount: 1000,
+            amount: 1.25,
+            naira_equivalent: 1000,
             breakdown: { lostfee: 1000 },
             date: timestamp,
             type: "payment",
@@ -183,7 +185,9 @@
           };
 
           const founderTxn = {
-            amount: 1000,
+            amount: 1.25,
+            naira_equivalent: 1000,
+            breakdown: { lostfee: 1000 },
             date: timestamp,
             type: "fund",
             user_id: founderKey
