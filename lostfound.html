@@ -1,139 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lost Found Items</title>
-    <link rel="stylesheet" href="styles.css">
-   <!-- Firebase SDK -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lost Found Items</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
 </head>
 <body>
-   <div id="sidebar-container"></div> 
-    <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
-    <header class="header">
-        <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
-    </header>
+  <div id="sidebar-container"></div> 
+  <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
+  <header class="header">
+    <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
+  </header>
 
-    <section class="page-section dashboard">
-        <div class="icon-spot">
-            <img src="icon.png" alt="Dashboard Icon" class="icon">
-        </div>
-       <h2>Lost & Found Items</h2>
+  <section class="page-section dashboard">
+    <div class="icon-spot">
+      <img src="icon.png" alt="Dashboard Icon" class="icon">
+    </div>
+    <h2>Lost & Found Items</h2>
+
+    <input type="text" id="searchInput" placeholder="Search by Name, Email, Matric, or Description..." />
+    <table class="history-table" id="lostItemsTable">
+      <thead>
+        <tr>
+          <th>Founder's Name</th>
+          <th>Item Name</th>
+          <th>Item Description</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="lostItemsBody"></tbody>
+    </table>
+  </section>
+
+  <!-- Image Modal -->
+  <div id="imageModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeImageModal()">&times;</span>
+      <img id="modalImage" src="" alt="Item Image" style="width:100%; border-radius:10px;">
+    </div>
   </div>
 
-  <input type="text" id="searchInput" placeholder="Search by Name, Email, Matric, or Description..." />
-  <table class="history-table" id="lostItemsTable">
-    <thead>
-      <tr>
-        <th>Founder's Name</th>
-<!--         <th>Email</th>
-        <th>Matric</th>
-        <th>Found Date</th> -->
-        <th>Item Name</th>
-        <th>Item Description</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="lostItemsBody"></tbody>
-  </table>
-</div>
-
-<!-- Image Modal -->
-<div id="imageModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeImageModal()">&times;</span>
-    <img id="modalImage" src="" alt="Item Image" style="width:100%; border-radius:10px;">
+  <!-- Claim Confirmation Modal -->
+  <div id="claimModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeClaimModal()">&times;</span>
+      <p id="claimText">Make payment of ₦1000 to the founder?</p>
+      <button onclick="confirmClaim()">Yes</button>
+      <button onclick="closeClaimModal()">No</button>
+    </div>
   </div>
-</div>
 
-<script>
-   fetch('sidebar.html')
-  .then(response => response.text())
-  .then(data => {
-    document.getElementById('sidebar-container').innerHTML = data;
+  <script>
+    fetch('sidebar.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('sidebar-container').innerHTML = data;
 
-    // Re-append script.js manually so toggleSidebar() becomes available
-    const script = document.createElement("script");
-    script.src = "script.js";
-    document.body.appendChild(script);
-  })
-  .catch(error => console.error('Error loading sidebar:', error));
+        const script = document.createElement("script");
+        script.src = "script.js";
+        document.body.appendChild(script);
+      })
+      .catch(error => console.error('Error loading sidebar:', error));
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
-    authDomain: "project-iot-51262.firebaseapp.com",
-    databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
-    projectId: "project-iot-51262",
-    storageBucket: "project-iot-51262.appspot.com",
-    messagingSenderId: "785303672386",
-    appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+      authDomain: "project-iot-51262.firebaseapp.com",
+      databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+      projectId: "project-iot-51262",
+      storageBucket: "project-iot-51262.appspot.com",
+      messagingSenderId: "785303672386",
+      appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+    };
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-  const searchInput = document.getElementById("searchInput");
-  const lostItemsBody = document.getElementById("lostItemsBody");
-  const modalImage = document.getElementById("modalImage");
-  const imageModal = document.getElementById("imageModal");
+    const searchInput = document.getElementById("searchInput");
+    const lostItemsBody = document.getElementById("lostItemsBody");
+    const modalImage = document.getElementById("modalImage");
+    const imageModal = document.getElementById("imageModal");
 
-  let lostItems = [];
+    let lostItems = [];
 
-  // Load all found items
-  db.ref("unilorin-ict/founditems").once("value", snapshot => {
-    snapshot.forEach(child => {
-      const item = child.val();
-      item.id = child.key;
-      lostItems.push(item);
+    // Load all found items
+    db.ref("unilorin-ict/founditems").once("value", snapshot => {
+      snapshot.forEach(child => {
+        const item = child.val();
+        item.id = child.key;
+        lostItems.push(item);
+      });
+      displayLostItems(lostItems);
     });
-    displayLostItems(lostItems);
-  });
 
-  // Display items in table
-  function displayLostItems(items) {
-    lostItemsBody.innerHTML = "";
-    items.forEach(item => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${item.founder_name || "-"}</td>
+    // Display items in table
+    function displayLostItems(items) {
+      lostItemsBody.innerHTML = "";
+      items.forEach(item => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${item.founder_name || "-"}</td>
+          <td>${item.item_name || "-"}</td>
+          <td>${item.item_description || "-"}</td>
+          <td>${item.status || "-"}</td>
+          <td>
+            <button onclick="viewImage('${item.image_url}')">View Image</button>
+            ${item.status !== "claimed" ? `|| <button onclick="claimItem('${item.id}', '${item.matric}', '${item.founder_name}')">Claim Item</button>` : ""}
+          </td>
+        `;
+        lostItemsBody.appendChild(row);
+      });
+    }
 
-        <td>${item.item_name || "-"}</td>
-        <td>${item.item_description || "-"}</td>
-        <td>${item.status || "-"}</td>
-        <td><button onclick="viewImage('${item.image_url}')">View Image</button></td>
-        <td><button onclick="claimitem()">Claim Item</button></td>
-      `;
-      lostItemsBody.appendChild(row);
+    // Filter items on search
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value.toLowerCase();
+      const filtered = lostItems.filter(item =>
+        item.founder_name?.toLowerCase().includes(query) ||
+        item.item_description?.toLowerCase().includes(query) ||
+        item.item_name?.toLowerCase().includes(query)
+      );
+      displayLostItems(filtered);
     });
-  }
 
-  // Filter items on search
-  searchInput.addEventListener("input", () => {
-    const query = searchInput.value.toLowerCase();
-    const filtered = lostItems.filter(item =>
-      item.founder_name?.toLowerCase().includes(query) ||
-      // item.email?.toLowerCase().includes(query) ||
-      // item.matric?.toLowerCase().includes(query) ||
-      item.item_description?.toLowerCase().includes(query) ||
-      item.item_name?.toLowerCase().includes(query)
-    );
-    displayLostItems(filtered);
-  });
+    function viewImage(url) {
+      modalImage.src = url;
+      imageModal.style.display = "block";
+    }
 
-  function viewImage(url) {
-    modalImage.src = url;
-    imageModal.style.display = "block";
-  }
+    function closeImageModal() {
+      imageModal.style.display = "none";
+    }
 
-  function closeImageModal() {
-    imageModal.style.display = "none";
-  }
-</script>
+    function claimItem(itemId, founderMatric, founderName) {
+      const userMatric = localStorage.getItem("matric");
+      if (!userMatric) return alert("User not logged in");
 
+      if (confirm(`Make payment of ₦1000 to the founder (${founderName})?`)) {
+        const usersRef = db.ref("unilorin-ict/users");
+
+        usersRef.once("value", snapshot => {
+          let currentUserKey = null;
+          let founderKey = null;
+          let currentUser = null;
+          let founderUser = null;
+
+          snapshot.forEach(child => {
+            const user = child.val();
+            if (user.matric === userMatric) {
+              currentUser = user;
+              currentUserKey = child.key;
+            }
+            if (user.matric === founderMatric) {
+              founderUser = user;
+              founderKey = child.key;
+            }
+          });
+
+          if (!currentUser || !founderUser) {
+            alert("User or founder not found.");
+            return;
+          }
+
+          if (currentUser.balance < 1000) {
+            alert("Insufficient balance.");
+            return;
+          }
+
+          const timestamp = new Date().toISOString();
+          const amnt = 1.25;
+          const nqui = 1000;
+          // Build transaction data
+          const claimerTxn = {
+            amount: 1.25,
+            naira_equivalent: 1000,
+            breakdown: { lostfee: 1000 },
+            date: timestamp,
+            type: "payment",
+            user_id: currentUserKey
+          };
+
+          const founderTxn = {
+            amount: 1.25,
+            naira_equivalent: 1000,
+            breakdown: { lostfee: 1000 },
+            date: timestamp,
+            type: "fund",
+            user_id: founderKey
+          };
+
+          // Update balances
+          usersRef.child(currentUserKey).update({ balance: currentUser.balance - 1000 });
+          usersRef.child(founderKey).update({ balance: founderUser.balance + 1000 });
+
+          // Mark item as claimed
+          db.ref("unilorin-ict/founditems").child(itemId).update({ status: "claimed" });
+
+          // Log transactions
+          const transactionsRef = db.ref("unilorin-ict/transactions");
+          transactionsRef.child(currentUserKey).push(claimerTxn);
+          transactionsRef.child(founderKey).push(founderTxn);
+
+          alert("Payment successful. Item marked as claimed.");
+          location.reload();
+        });
+      }
+    }
+  </script>
+
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background: white;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .modal-content button {
+      margin: 10px;
+    }
+  </style>
 </body>
-
 </html>
