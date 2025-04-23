@@ -133,6 +133,54 @@
     function capitalize(text) {
       return text.charAt(0).toUpperCase() + text.slice(1);
     }
+
+
+	  // Check for new lost items
+function checkForNewItems() {
+  const notificationsRef = db.ref("unilorin-ict/notifications");
+  const userRef = db.ref("unilorin-ict/users/" + userId);
+
+  Promise.all([
+    notificationsRef.once("value"),
+    userRef.once("value")
+  ]).then(([notifSnap, userSnap]) => {
+    const allNotifs = notifSnap.val() || {};
+    const user = userSnap.val();
+
+    if (!user || !user.last_seen_notification) return;
+
+    // Get latest timestamp from founditems
+    let latestNotifTime = 0;
+    for (let key in allNotifs) {
+      const notif = allNotifs[key];
+      if (notif.timestamp > latestNotifTime) {
+        latestNotifTime = notif.timestamp;
+      }
+    }
+
+    if (latestNotifTime > (user.last_seen_notification || 0)) {
+      // Show notification
+      document.getElementById("notificationPopup").classList.remove("hidden");
+    }
+  });
+}
+
+// Dismiss popup and mark as read
+function dismissNotification() {
+  document.getElementById("notificationPopup").classList.add("hidden");
+  const now = Date.now();
+  db.ref("unilorin-ict/users/" + userId + "/last_seen_notification").set(now);
+}
+
+checkForNewItems();
+
   </script>
+
+	<div id="notificationPopup" class="notification-popup hidden">
+  <p>New lost item submitted. <a href="https://institutionalwallet.vercel.app/lostfound.html">View now</a></p>
+  <button onclick="dismissNotification()">X</button>
+</div>
+
+	
 </body>
 </html>
