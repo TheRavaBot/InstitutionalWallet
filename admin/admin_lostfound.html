@@ -227,6 +227,13 @@
               image_url: imageUrl,
             });
 
+            await db.ref("unilorin-ict/notifications").push({
+  type: "lost_item",
+  timestamp: Date.now()
+});
+
+            
+            
             // 🔔 Set notifications for all users (except the current one)
             const usersRef = db.ref("unilorin-ict/users");
             usersRef.once("value", snapshot => {
