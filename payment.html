@@ -122,6 +122,32 @@
     // }
 
 
+// 	  function renderFeeOptions(fees) {
+//   const form = document.getElementById("feeForm");
+//   form.innerHTML = "";
+
+//   for (const key in fees) {
+//     const amount = parseFloat(fees[key]);
+
+//     const label = document.createElement("label");
+//     label.style.display = "block"; // ensure each label is on its own line
+//     label.style.cursor = "pointer";
+
+//     const checkbox = document.createElement("input");
+//     checkbox.type = "checkbox";
+//     checkbox.name = "feeItem";
+//     checkbox.value = amount;
+//     checkbox.setAttribute("data-key", key);
+//     checkbox.setAttribute("onchange", "calculateTotal()");
+
+//     label.appendChild(checkbox);
+//     label.appendChild(document.createTextNode(` ${key.replace(/fee$/, '').toUpperCase()} - ₦${amount.toLocaleString()}`));
+    
+//     form.appendChild(label);
+//   }
+// }
+
+
 	  function renderFeeOptions(fees) {
   const form = document.getElementById("feeForm");
   form.innerHTML = "";
@@ -129,9 +155,10 @@
   for (const key in fees) {
     const amount = parseFloat(fees[key]);
 
-    const label = document.createElement("label");
-    label.style.display = "block"; // ensure each label is on its own line
-    label.style.cursor = "pointer";
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.alignItems = "center";
+    wrapper.style.gap = "8px";
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
@@ -140,12 +167,15 @@
     checkbox.setAttribute("data-key", key);
     checkbox.setAttribute("onchange", "calculateTotal()");
 
-    label.appendChild(checkbox);
-    label.appendChild(document.createTextNode(` ${key.replace(/fee$/, '').toUpperCase()} - ₦${amount.toLocaleString()}`));
-    
-    form.appendChild(label);
+    const labelText = document.createElement("span");
+    labelText.textContent = `${key.replace(/fee$/, '').toUpperCase()} - ₦${amount.toLocaleString()}`;
+
+    wrapper.appendChild(checkbox);
+    wrapper.appendChild(labelText);
+    form.appendChild(wrapper);
   }
 }
+
 
 
     function calculateTotal() {
