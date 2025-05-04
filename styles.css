@@ -128,12 +128,12 @@ form {
     margin: 0 auto;
 }
 
-.feeform {
+.feeForm {
     display: block; /* or revert to default */
     max-width: unset;
     margin: unset;
 }
-.feeform label {
+.feeForm label {
     display: inline-block;
     margin-bottom: 10px;
 }
