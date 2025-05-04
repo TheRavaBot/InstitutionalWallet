@@ -43,152 +43,145 @@
 
   <div id="sidebar-container"></div>
 
-<script>
-  // Load sidebar.html into #sidebar-container
-  fetch('sidebar.html')
-    .then(response => response.text())
-    .then(data => {
-      document.getElementById('sidebar-container').innerHTML = data;
-      const script = document.createElement("script");
-      script.src = "script.js";
-      document.body.appendChild(script);
-    })
-    .catch(error => console.error('Sidebar load error:', error));
-</script>
+  <script>
+    // Load sidebar.html
+    fetch('sidebar.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('sidebar-container').innerHTML = data;
+        const script = document.createElement("script");
+        script.src = "script.js";
+        document.body.appendChild(script);
+      })
+      .catch(error => console.error('Sidebar load error:', error));
+  </script>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
-    authDomain: "project-iot-51262.firebaseapp.com",
-    databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
-    projectId: "project-iot-51262",
-    storageBucket: "project-iot-51262.appspot.com",
-    messagingSenderId: "785303672386",
-    appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
-  };
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+      authDomain: "project-iot-51262.firebaseapp.com",
+      databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+      projectId: "project-iot-51262",
+      storageBucket: "project-iot-51262.appspot.com",
+      messagingSenderId: "785303672386",
+      appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+    };
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-  const userId = localStorage.getItem("user_id");
-  if (!userId) {
-    window.location.href = "login.html";
-  }
-
-  // Fetch user data
-  db.ref("unilorin-ict/users/" + userId).once("value", snapshot => {
-    const user = snapshot.val();
-    if (user) {
-      document.getElementById("tokenAmount")?.innerText = (parseFloat(user.balance || 0) / 800).toFixed(2);
-      document.getElementById("nairaAmount")?.innerText = "₦" + parseFloat(user.balance || 0).toFixed(2);
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      window.location.href = "login.html";
     }
-  });
 
-  // Fetch transaction history
-  db.ref("unilorin-ict/transactions/" + userId)
-    .orderByChild("date")
-    .once("value", (snapshot) => {
-      const tbody = document.getElementById("transactionTableBody");
-      const transactions = [];
+    const transactions = [];
 
-      snapshot.forEach((childSnap) => {
-        transactions.push(childSnap.val());
-      });
-
-      transactions.reverse().forEach((txn) => {
-        const row = document.createElement("tr");
-
-        let breakdownText = "—";
-        if (txn.breakdown && typeof txn.breakdown === "object") {
-          const items = [];
-          for (const key in txn.breakdown) {
-            const label = key.replace(/fee$/, "").replace(/_/g, " ");
-            const value = parseFloat(txn.breakdown[key]);
-            items.push(`${capitalize(label)}: ₦${value.toLocaleString()}`);
-          }
-          breakdownText = items.join(", ");
-        }
-
-        row.innerHTML = `
-          <td>${capitalize(txn.type)}</td>
-          <td>${parseFloat(txn.amount).toFixed(2)}</td>
-          <td>₦${parseFloat(txn.naira_equivalent).toFixed(2)}</td>
-          <td>${breakdownText}</td>
-          <td>${new Date(txn.date).toLocaleString()}</td>
-          <td><button class="print-btn" data-txn='${encodeURIComponent(JSON.stringify(txn))}'>🖨️ Print</button></td>
-        `;
-        tbody.appendChild(row);
-      });
-
-      // Attach print handlers
-      document.querySelectorAll(".print-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const txnData = decodeURIComponent(btn.getAttribute("data-txn"));
-          const txn = JSON.parse(txnData);
-          printReceipt(txn);
-        });
-      });
+    db.ref("unilorin-ict/users/" + userId).once("value", snapshot => {
+      const user = snapshot.val();
+      if (user) {
+        document.getElementById("welcomeUser")?.innerText = `Welcome, ${user.name}!`;
+        const balance = parseFloat(user.balance || 0);
+        document.getElementById("tokenAmount")?.innerText = (balance / 800).toFixed(2);
+        document.getElementById("nairaAmount")?.innerText = "₦" + balance.toFixed(2);
+      }
     });
 
-  function capitalize(text) {
-    return text.charAt(0).toUpperCase() + text.slice(1);
-  }
+    db.ref("unilorin-ict/transactions/" + userId)
+      .orderByChild("date")
+      .once("value", (snapshot) => {
+        const tbody = document.getElementById("transactionTableBody");
 
-  function printReceipt(txn) {
-    const win = window.open('', '', 'width=800,height=700');
-    win.document.write(`
-      <html>
-        <head>
-          <title>Receipt - University of Ilorin</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              padding: 20px;
-              text-align: center;
+        snapshot.forEach((childSnap) => {
+          transactions.push(childSnap.val());
+        });
+
+        transactions.reverse().forEach((txn, index) => {
+          const row = document.createElement("tr");
+
+          let breakdownText = "—";
+          if (txn.breakdown && typeof txn.breakdown === "object") {
+            const items = [];
+            for (const key in txn.breakdown) {
+              const label = key.replace(/fee$/, "").replace(/_/g, " ");
+              const value = parseFloat(txn.breakdown[key]);
+              items.push(`${capitalize(label)}: ₦${value.toLocaleString()}`);
             }
-            h1 {
-              margin-bottom: 5px;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 20px;
-            }
-            td, th {
-              border: 1px solid #ccc;
-              padding: 10px;
-            }
-            .logo {
-              width: 80px;
-              height: auto;
-              margin-bottom: 10px;
-            }
-          </style>
-        </head>
-        <body>
-          <img class="logo" src="icon.png" alt="Logo"/>
-          <h1>University of Ilorin</h1>
-          <h2>Digital Wallet - Transaction Receipt</h2>
-          <table>
-            <tr><th>Transaction Type</th><td>${capitalize(txn.type)}</td></tr>
-            <tr><th>Amount (Token)</th><td>${parseFloat(txn.amount).toFixed(2)}</td></tr>
-            <tr><th>Naira Equivalent</th><td>₦${parseFloat(txn.naira_equivalent).toFixed(2)}</td></tr>
-            <tr><th>Date</th><td>${new Date(txn.date).toLocaleString()}</td></tr>
-            <tr><th>Breakdown</th><td>${
-              txn.breakdown
-                ? Object.entries(txn.breakdown)
-                    .map(([k, v]) => `${capitalize(k.replace(/fee$/, '').replace(/_/g, ' '))}: ₦${parseFloat(v).toLocaleString()}`)
-                    .join('<br>')
-                : '—'
-            }</td></tr>
-          </table>
-          <p style="margin-top: 30px;">Thank you for using University of Ilorin Digital Wallet</p>
-          <script>window.onload = () => { window.print(); }</script>
-        </body>
-      </html>
-    `);
-    win.document.close();
-  }
-</script>
+            breakdownText = items.join(", ");
+          }
+
+          row.innerHTML = `
+            <td>${capitalize(txn.type)}</td>
+            <td>${parseFloat(txn.amount).toFixed(2)}</td>
+            <td>₦${parseFloat(txn.naira_equivalent).toFixed(2)}</td>
+            <td>${breakdownText}</td>
+            <td>${new Date(txn.date).toLocaleString()}</td>
+            <td><button class="print-btn" data-index="${index}">🖨️ Print</button></td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        // Add print button event
+        document.querySelectorAll(".print-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const index = btn.getAttribute("data-index");
+            printReceipt(transactions[index]);
+          });
+        });
+      });
+
+    function capitalize(text) {
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function printReceipt(txn) {
+      const win = window.open('', '_blank');
+      const logo = 'icon.png';
+      const breakdown = txn.breakdown && typeof txn.breakdown === "object"
+        ? Object.entries(txn.breakdown).map(([key, val]) => {
+            const label = key.replace(/fee$/, "").replace(/_/g, " ");
+            return `<tr><td>${capitalize(label)}</td><td>₦${parseFloat(val).toLocaleString()}</td></tr>`;
+          }).join("")
+        : "<tr><td colspan='2'>No breakdown</td></tr>";
+
+      const htmlContent = `
+        <html>
+          <head>
+            <title>Transaction Receipt</title>
+            <style>
+              body { font-family: Arial; padding: 20px; }
+              h1, h2 { text-align: center; }
+              .logo { display: block; margin: 0 auto; width: 100px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              td, th { border: 1px solid #333; padding: 8px; text-align: left; }
+              .footer { margin-top: 40px; text-align: center; font-size: 12px; color: gray; }
+            </style>
+          </head>
+          <body>
+            <img src="${logo}" alt="Logo" class="logo" />
+            <h1>University of Ilorin</h1>
+            <h2>Digital Wallet Transaction Receipt</h2>
+
+            <p><strong>Type:</strong> ${capitalize(txn.type)}</p>
+            <p><strong>Amount (Token):</strong> ${parseFloat(txn.amount).toFixed(2)}</p>
+            <p><strong>Naira Equivalent:</strong> ₦${parseFloat(txn.naira_equivalent).toFixed(2)}</p>
+            <p><strong>Date:</strong> ${new Date(txn.date).toLocaleString()}</p>
+
+            <h3>Breakdown</h3>
+            <table>
+              <thead><tr><th>Item</th><th>Amount</th></tr></thead>
+              <tbody>${breakdown}</tbody>
+            </table>
+
+            <div class="footer">This is a system-generated receipt from the Digital Wallet Portal.</div>
+            <script>window.print();</script>
+          </body>
+        </html>
+      `;
+
+      win.document.write(htmlContent);
+      win.document.close();
+    }
+  </script>
 </body>
 </html>
