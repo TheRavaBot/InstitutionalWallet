@@ -128,6 +128,17 @@ form {
     margin: 0 auto;
 }
 
+.feeform {
+    display: block; /* or revert to default */
+    max-width: unset;
+    margin: unset;
+}
+.feeform label {
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+
 input, select, button {
     padding: 10px;
     border: 1px solid navy;
