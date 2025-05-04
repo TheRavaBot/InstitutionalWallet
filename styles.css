@@ -133,7 +133,12 @@ form {
     align-items: center;
     gap: 8px;
 }
-/*  */
+#feeForm input {
+    padding: 10px;
+    border: 1px solid navy;
+    border-radius: 4px;
+/*     width: 100%; */
+}
 
 
 input, select, button {
