@@ -148,6 +148,34 @@
 // }
 
 
+// 	  function renderFeeOptions(fees) {
+//   const form = document.getElementById("feeForm");
+//   form.innerHTML = "";
+
+//   for (const key in fees) {
+//     const amount = parseFloat(fees[key]);
+
+//     const wrapper = document.createElement("div");
+//     wrapper.style.display = "flex";
+//     wrapper.style.alignItems = "center";
+//     wrapper.style.gap = "8px";
+
+//     const checkbox = document.createElement("input");
+//     checkbox.type = "checkbox";
+//     checkbox.name = "feeItem";
+//     checkbox.value = amount;
+//     checkbox.setAttribute("data-key", key);
+//     checkbox.setAttribute("onchange", "calculateTotal()");
+
+//     const labelText = document.createElement("span");
+//     labelText.textContent = `${key.replace(/fee$/, '').toUpperCase()} - ₦${amount.toLocaleString()}`;
+
+//     wrapper.appendChild(checkbox);
+//     wrapper.appendChild(labelText);
+//     form.appendChild(wrapper);
+//   }
+// }
+
 	  function renderFeeOptions(fees) {
   const form = document.getElementById("feeForm");
   form.innerHTML = "";
@@ -155,10 +183,11 @@
   for (const key in fees) {
     const amount = parseFloat(fees[key]);
 
-    const wrapper = document.createElement("div");
-    wrapper.style.display = "flex";
-    wrapper.style.alignItems = "center";
-    wrapper.style.gap = "8px";
+    const labelWrapper = document.createElement("label");
+    labelWrapper.style.display = "flex";
+    labelWrapper.style.alignItems = "flex-start";
+    labelWrapper.style.gap = "10px";
+    labelWrapper.style.marginBottom = "10px";
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
@@ -167,14 +196,27 @@
     checkbox.setAttribute("data-key", key);
     checkbox.setAttribute("onchange", "calculateTotal()");
 
-    const labelText = document.createElement("span");
-    labelText.textContent = `${key.replace(/fee$/, '').toUpperCase()} - ₦${amount.toLocaleString()}`;
+    const textWrapper = document.createElement("div");
+    textWrapper.style.display = "flex";
+    textWrapper.style.flexDirection = "column";
 
-    wrapper.appendChild(checkbox);
-    wrapper.appendChild(labelText);
-    form.appendChild(wrapper);
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = key.replace(/fee$/i, "").toUpperCase();
+
+    const amountSpan = document.createElement("span");
+    amountSpan.textContent = `₦${amount.toLocaleString()}`;
+    amountSpan.style.fontWeight = "bold";
+
+    textWrapper.appendChild(nameSpan);
+    textWrapper.appendChild(amountSpan);
+
+    labelWrapper.appendChild(checkbox);
+    labelWrapper.appendChild(textWrapper);
+
+    form.appendChild(labelWrapper);
   }
 }
+
 
 
 
