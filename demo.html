@@ -1,99 +1,167 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>User Transactions</title>
-  <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-    }
-    th {
-      background-color: #f0f0f0;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
+  <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
+  <header class="header">
+    <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
+  </header>
 
-<h2>User Transaction History</h2>
+  <section class="page-section dashboard">
+    <div class="icon-spot">
+      <img src="icon.png" alt="Dashboard Icon" class="icon">
+    </div>
+  </section>
 
-<table id="transactionsTable">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Amount</th>
-      <th>Naira Equivalent</th>
-      <th>Type</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- Transactions will be inserted here -->
-  </tbody>
-</table>
+  <section class="page-section">
+    <h2>Transaction History</h2>
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Amount (Token)</th>
+          <th>Naira Equivalent</th>
+          <th>Breakdown</th>
+          <th>Date</th>
+          <th>Receipt</th>
+        </tr>
+      </thead>
+      <tbody id="transactionTableBody">
+        <!-- Filled via JavaScript -->
+      </tbody>
+    </table>
+  </section>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <div id="sidebar-container"></div>
 
-<script>
-  // Your Firebase config
-  var firebaseConfig = {
-    apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
-    authDomain: "project-iot-51262.firebaseapp.com",
-    databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
-    projectId: "project-iot-51262",
-    storageBucket: "project-iot-51262.appspot.com",
-    messagingSenderId: "785303672386",
-    appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
-  };
-  firebase.initializeApp(firebaseConfig);
+  <script>
+    // Load sidebar.html into #sidebar-container
+    fetch('sidebar.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('sidebar-container').innerHTML = data;
+        const script = document.createElement("script");
+        script.src = "script.js";
+        document.body.appendChild(script);
+      })
+      .catch(error => console.error('Sidebar load error:', error));
+  </script>
 
-  const userId = "1"; // Replace with the actual logged-in user's ID
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+      authDomain: "project-iot-51262.firebaseapp.com",
+      databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+      projectId: "project-iot-51262",
+      storageBucket: "project-iot-51262.appspot.com",
+      messagingSenderId: "785303672386",
+      appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+    };
 
-  function filterTransactionsByUser(allTransactions, targetUserId) {
-    const userTransactions = [];
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    Object.keys(allTransactions).forEach(userKey => {
-      const transactionGroup = allTransactions[userKey];
-      Object.keys(transactionGroup).forEach(txnKey => {
-        const txn = transactionGroup[txnKey];
-        if (txn?.user_id === targetUserId) {
-          userTransactions.push({
-            id: txnKey,
-            ...txn
-          });
-        }
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      window.location.href = "login.html";
+    }
+
+    function capitalize(text) {
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function printReceipt(txn) {
+      const win = window.open('', '_blank');
+      const breakdownText = txn.breakdown
+        ? Object.keys(txn.breakdown).map(key =>
+            `${capitalize(key.replace(/fee$/, "").replace(/_/g, " "))}: ₦${parseFloat(txn.breakdown[key]).toLocaleString()}`
+          ).join('<br>') : '—';
+
+      win.document.write(`
+        <html>
+        <head>
+          <title>Transaction Receipt</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2 { text-align: center; }
+            .receipt-box {
+              border: 1px solid #ccc;
+              padding: 20px;
+              max-width: 400px;
+              margin: auto;
+            }
+            .receipt-box div {
+              margin-bottom: 10px;
+            }
+            .footer {
+              margin-top: 20px;
+              text-align: center;
+              font-size: 0.9em;
+              color: #888;
+            }
+          </style>
+        </head>
+        <body>
+          <h2>University Of Ilorin Digital Wallet</h2>
+          <div class="receipt-box">
+            <div><strong>Type:</strong> ${capitalize(txn.type)}</div>
+            <div><strong>Amount (Token):</strong> ${parseFloat(txn.amount).toFixed(2)}</div>
+            <div><strong>Naira Equivalent:</strong> ₦${parseFloat(txn.naira_equivalent).toFixed(2)}</div>
+            <div><strong>Breakdown:</strong><br>${breakdownText}</div>
+            <div><strong>Date:</strong> ${new Date(txn.date).toLocaleString()}</div>
+          </div>
+          <div class="footer">Thank you for using the Unilorin Digital Wallet.</div>
+          <script>window.print();</script>
+        </body>
+        </html>
+      `);
+      win.document.close();
+    }
+
+    db.ref("unilorin-ict/transactions/" + userId)
+      .orderByChild("date")
+      .once("value", (snapshot) => {
+        const tbody = document.getElementById("transactionTableBody");
+        const transactions = [];
+
+        snapshot.forEach((childSnap) => {
+          transactions.push(childSnap.val());
+        });
+
+        transactions.reverse().forEach((txn, index) => {
+          const row = document.createElement("tr");
+
+          let breakdownText = "—";
+          if (txn.breakdown && typeof txn.breakdown === "object") {
+            const items = [];
+            for (const key in txn.breakdown) {
+              const label = key.replace(/fee$/, "").replace(/_/g, " ");
+              const value = parseFloat(txn.breakdown[key]);
+              items.push(`${capitalize(label)}: ₦${value.toLocaleString()}`);
+            }
+            breakdownText = items.join(", ");
+          }
+
+          row.innerHTML = `
+            <td>${capitalize(txn.type)}</td>
+            <td>${(parseFloat(txn.amount)).toFixed(2)}</td>
+            <td>₦${parseFloat(txn.naira_equivalent).toFixed(2)}</td>
+            <td>${breakdownText}</td>
+            <td>${new Date(txn.date).toLocaleString()}</td>
+            <td><button onclick='printReceipt(${JSON.stringify(txn).replace(/'/g, "\\'")})'>Print</button></td>
+          `;
+          tbody.appendChild(row);
+        });
       });
-    });
-
-    return userTransactions;
-  }
-
-  function displayTransactions(transactions) {
-    const tableBody = document.getElementById("transactionsTable").getElementsByTagName("tbody")[0];
-    tableBody.innerHTML = ""; // Clear previous rows
-
-    transactions.forEach(txn => {
-      const row = tableBody.insertRow();
-      row.innerHTML = `
-        <td>${new Date(txn.date).toLocaleString()}</td>
-        <td>${txn.amount}</td>
-        <td>${txn.naira_equivalent || 'N/A'}</td>
-        <td>${txn.type}</td>
-      `;
-    });
-  }
-
-  firebase.database().ref("unilorin-ict/transactions").once("value").then(snapshot => {
-    const allTransactions = snapshot.val();
-    const transactionsForUser = filterTransactionsByUser(allTransactions, userId);
-    displayTransactions(transactionsForUser);
-  });
-</script>
-
+  </script>
 </body>
 </html>
