@@ -104,22 +104,49 @@
       renderFeeOptions(feeItems);
     }
 
-    function renderFeeOptions(fees) {
-      const form = document.getElementById("feeForm");
-      form.innerHTML = "";
+    // function renderFeeOptions(fees) {
+    //   const form = document.getElementById("feeForm");
+    //   form.innerHTML = "";
 
-      for (const key in fees) {
-        const amount = parseFloat(fees[key]);
+    //   for (const key in fees) {
+    //     const amount = parseFloat(fees[key]);
 
-        const label = document.createElement("label");
-        label.innerHTML = `
-          <input type="checkbox" name="feeItem" value="${amount}" data-key="${key}" onchange="calculateTotal()" />
-          ${key.replace(/fee$/, '').toUpperCase()} - ₦${amount.toLocaleString()}
-        `;
-        form.appendChild(label);
-        form.appendChild(document.createElement("br"));
-      }
-    }
+    //     const label = document.createElement("label");
+    //     label.innerHTML = `
+    //       <input type="checkbox" name="feeItem" value="${amount}" data-key="${key}" onchange="calculateTotal()" />
+    //       ${key.replace(/fee$/, '').toUpperCase()} - ₦${amount.toLocaleString()}
+    //     `;
+    //     form.appendChild(label);
+    //     form.appendChild(document.createElement("br"));
+    //   }
+    // }
+
+
+	  function renderFeeOptions(fees) {
+  const form = document.getElementById("feeForm");
+  form.innerHTML = "";
+
+  for (const key in fees) {
+    const amount = parseFloat(fees[key]);
+
+    const label = document.createElement("label");
+    label.style.display = "block"; // ensure each label is on its own line
+    label.style.cursor = "pointer";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.name = "feeItem";
+    checkbox.value = amount;
+    checkbox.setAttribute("data-key", key);
+    checkbox.setAttribute("onchange", "calculateTotal()");
+
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(` ${key.replace(/fee$/, '').toUpperCase()} - ₦${amount.toLocaleString()}`));
+    
+    form.appendChild(label);
+  }
+}
+
 
     function calculateTotal() {
       const checkboxes = document.querySelectorAll('input[name="feeItem"]:checked');
