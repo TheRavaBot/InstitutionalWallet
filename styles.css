@@ -128,15 +128,12 @@ form {
     margin: 0 auto;
 }
 
-.feeForm {
-    display: block; /* or revert to default */
-    max-width: unset;
-    margin: unset;
+#feeForm label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
-.feeForm label {
-    display: inline-block;
-    margin-bottom: 10px;
-}
+/*  */
 
 
 input, select, button {
