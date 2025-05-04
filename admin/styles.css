@@ -30,7 +30,7 @@ body {
 }
 
 .headerc {
-    font-size: 28px;
+    font-size: 25px;
 }
 
 /* Navigation */
@@ -235,7 +235,7 @@ a:hover {
 
 .menu-btn {
     position: fixed;
-    top: 10px;
+    top: 0px;
     left: 0px;
     font-size: 30px;
     background-color: navy;
