@@ -3,115 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard</title>
-  <link rel="stylesheet" href="styles.css" />
-  <style>
-    /* Add this new CSS for the receipt styling */
-    .print-btn {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      margin-top: 5px;
-    }
-    
-    .print-btn:hover {
-      background-color: #45a049;
-    }
-    
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-      .receipt-container, .receipt-container * {
-        visibility: visible;
-      }
-      .receipt-container {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-      }
-      .no-print {
-        display: none !important;
-      }
-    }
-    
-    .receipt-container {
-      display: none;
-      max-width: 500px;
-      margin: 20px auto;
-      padding: 20px;
-      border: 1px solid #ddd;
-      font-family: Arial, sans-serif;
-    }
-    
-    .receipt-header {
-      text-align: center;
-      margin-bottom: 20px;
-      border-bottom: 2px solid #000;
-      padding-bottom: 10px;
-    }
-    
-    .receipt-logo {
-      max-width: 80px;
-      margin-bottom: 10px;
-    }
-    
-    .receipt-title {
-      font-size: 24px;
-      font-weight: bold;
-      margin: 10px 0;
-    }
-    
-    .receipt-subtitle {
-      font-size: 16px;
-      margin-bottom: 5px;
-    }
-    
-    .receipt-details {
-      margin: 20px 0;
-    }
-    
-    .receipt-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-    
-    .receipt-label {
-      font-weight: bold;
-    }
-    
-    .receipt-footer {
-      text-align: center;
-      margin-top: 30px;
-      font-size: 14px;
-      color: #666;
-      border-top: 1px dashed #999;
-      padding-top: 10px;
-    }
-    
-    .receipt-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 15px 0;
-    }
-    
-    .receipt-table th, .receipt-table td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-    
-    .receipt-table th {
-      background-color: #f2f2f2;
-    }
-  </style>
-
+  <title>Reward Student</title>
+  <link rel="stylesheet" href="styles.css">
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -125,93 +18,43 @@
   <section class="page-section dashboard">
     <div class="icon-spot">
       <img src="icon.png" alt="Dashboard Icon" class="icon">
+      <h2>Reward Student</h2>
     </div>
   </section>
 
   <section class="page-section">
-    <h2>Transaction History</h2>
-    <table class="history-table">
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Amount (Token)</th>
-          <th>Naira Equivalent</th>
-          <th>Breakdown</th>
-          <th>Date</th>
-          <th class="no-print">Action</th>
-        </tr>
-      </thead>
-      <tbody id="transactionTableBody">
-        <!-- Filled via JavaScript -->
-      </tbody>
-    </table>
+    <form id="rewardForm">
+      <label for="matricNo">Matriculation Number:</label>
+      <input type="text" id="matricNo" name="matricNo" required />
+      
+      <label for="description">Description of Reward:</label>
+      <textarea id="description" name="description" required></textarea>
+      
+      <label for="tokenAmount">Token Amount:</label>
+      <input type="number" id="tokenAmount" name="tokenAmount" step="0.01" required oninput="calculateNaira()" />
+      
+      <p>Naira Equivalent: <span id="nairaEquivalent">₦0.00</span></p>
+      
+      <label for="feeType">Fee Type (for breakdown):</label>
+      <select id="feeType">
+        <option value="">-- Select Fee Type --</option>
+        <option value="departmentfee">Department Fee</option>
+        <option value="graduationfee">Graduation Fee</option>
+        <option value="hostelfee">Hostel Fee</option>
+        <option value="matriculationfee">Matriculation Fee</option>
+        <option value="schoolfee">School Fee</option>
+        <option value="lostfee">Lost Item Fee</option>
+        <option value="other">Other</option>
+      </select>
+      
+      <button type="button" onclick="rewardStudent()">Reward Student</button>
+    </form>
+
+    <a href="dashboard.html">Back to Dashboard</a>
   </section>
   
-  <!-- Receipt template (hidden until printed) -->
-  <div id="receipt-template" class="receipt-container">
-    <div class="receipt-header">
-      <img src="icon.png" alt="University Logo" class="receipt-logo">
-      <div class="receipt-title">UNIVERSITY OF ILORIN</div>
-      <div class="receipt-subtitle">DIGITAL WALLET PAYMENT RECEIPT</div>
-    </div>
-    
-    <div class="receipt-details">
-      <div class="receipt-row">
-        <span class="receipt-label">Receipt No:</span>
-        <span id="receipt-number">---</span>
-      </div>
-      <div class="receipt-row">
-        <span class="receipt-label">Date:</span>
-        <span id="receipt-date">---</span>
-      </div>
-      <div class="receipt-row">
-        <span class="receipt-label">Student ID:</span>
-        <span id="receipt-student-id">---</span>
-      </div>
-      <div class="receipt-row">
-        <span class="receipt-label">Student Name:</span>
-        <span id="receipt-student-name">---</span>
-      </div>
-
-            <div class="receipt-row">
-        <span class="receipt-label">Student Matric:</span>
-        <span id="receipt-student-matric">---</span>
-      </div>
-
-    
-    </div>
-    
-    <table class="receipt-table">
-      <thead>
-        <tr>
-          <th>Description</th>
-          <th>Amount (₦)</th>
-        </tr>
-      </thead>
-      <tbody id="receipt-items">
-        <!-- Filled dynamically -->
-      </tbody>
-      <tfoot>
-        <tr>
-          <th>Total</th>
-          <th id="receipt-total">₦0.00</th>
-        </tr>
-        <tr>
-          <th>Token Equivalent</th>
-          <th id="receipt-tokens">0.00</th>
-        </tr>
-      </tfoot>
-    </table>
-    
-    <div class="receipt-footer">
-      <div>Thank you for your payment</div>
-      <div>This is an electronic receipt - No signature required</div>
-      <div>For inquiries, contact: digitalwallet@unilorin.edu.ng</div>
-    </div>
-  </div>
-  
   <div id="sidebar-container"></div>
-  
+
   <script>
     // Load sidebar.html into #sidebar-container
     fetch('sidebar.html')
@@ -224,9 +67,7 @@
         document.body.appendChild(script);
       })
       .catch(error => console.error('Sidebar load error:', error));
-  </script>
 
-  <script>
     // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
@@ -237,159 +78,94 @@
       messagingSenderId: "785303672386",
       appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
     };
-
+    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
+    
+    // Check if user is admin (you may want to implement proper admin authentication)
     const userId = localStorage.getItem("user_id");
     if (!userId) {
-      // Redirect to login if no session
       window.location.href = "login.html";
     }
 
-    let userName = "Student";
-    let userBalance = 0;
-
-    // Fetch user data
-    db.ref("unilorin-ict/users/" + userId).once("value", snapshot => {
-      const user = snapshot.val();
-      if (user) {
-        userName = user.name || "Student";
-        userBalance = parseFloat(user.balance || 0);
-      }
-    });
-
-    // Fetch transaction history
-    db.ref("unilorin-ict/transactions/" + userId)
-      .orderByChild("date")
-      .once("value", (snapshot) => {
-        const tbody = document.getElementById("transactionTableBody");
-        const transactions = [];
-
-        snapshot.forEach((childSnap) => {
-          const txnData = childSnap.val();
-          transactions.push({ 
-            id: childSnap.key,
-            type: txnData.type || "",
-            amount: txnData.amount || 0,
-            naira_equivalent: txnData.naira_equivalent || 0,
-            breakdown: txnData.breakdown || {},
-            date: txnData.date || new Date().toISOString()
-          });
-        });
-
-        transactions.reverse().forEach((txn) => {
-          const row = document.createElement("tr");
-
-          let breakdownText = "";
-          if (txn.breakdown && typeof txn.breakdown === "object" && Object.keys(txn.breakdown).length > 0) {
-            const items = [];
-            for (const key in txn.breakdown) {
-              const label = key.replace(/fee$/, "").replace(/_/g, " ");
-              const value = parseFloat(txn.breakdown[key]) || 0;
-              items.push(`${capitalize(label)}: ₦${value.toLocaleString()}`);
-            }
-            breakdownText = items.join(", ");
-          } else {
-            breakdownText = "—";
-          }
-
-          const nairaEquivalent = txn.naira_equivalent || 
-                                (txn.breakdown ? Object.values(txn.breakdown).reduce((a, b) => a + (parseFloat(b) || 0), 0) : 0);
-
-          // Create a safe string for the breakdown
-          let safeBreakdown = '{}';
-          try {
-            safeBreakdown = JSON.stringify(txn.breakdown || {})
-              .replace(/"/g, '&quot;')
-              .replace(/'/g, "\\'")
-              .replace(/\n/g, '\\n');
-          } catch (e) {
-            console.error("Error stringifying breakdown:", e);
-          }
-
-          row.innerHTML = `
-            <td>${capitalize(txn.type)}</td>
-            <td>${(parseFloat(txn.amount) || 0).toFixed(2)}</td>
-            <td>${nairaEquivalent ? '₦' + parseFloat(nairaEquivalent).toFixed(2) : '—'}</td>
-            <td>${breakdownText}</td>
-            <td>${new Date(txn.date).toLocaleString()}</td>
-            <td class="no-print">
-              <button class="print-btn" onclick="printReceipt(
-                '${txn.id.replace(/'/g, "\\'")}',
-                '${txn.type.replace(/'/g, "\\'")}',
-                ${parseFloat(txn.amount) || 0},
-                ${parseFloat(nairaEquivalent) || 0},
-                '${safeBreakdown}',
-                '${new Date(txn.date).toISOString()}'
-              )">Print Receipt</button>
-            </td>
-          `;
-          tbody.appendChild(row);
-        });
-      });
-
-    function capitalize(text) {
-      return text ? text.charAt(0).toUpperCase() + text.slice(1) : "";
+    function calculateNaira() {
+      const amount = parseFloat(document.getElementById("tokenAmount").value) || 0;
+      const nairaEquivalent = amount * 800;
+      document.getElementById("nairaEquivalent").textContent = "₦" + nairaEquivalent.toFixed(2);
     }
-    
-    function printReceipt(id, type, amount, nairaEquivalent, breakdownJson, date) {
-      try {
-        const receipt = document.getElementById("receipt-template");
-        let breakdown = {};
-        
-        try {
-          // Convert HTML entities back to quotes and parse
-          const cleanJson = breakdownJson.replace(/&quot;/g, '"');
-          breakdown = JSON.parse(cleanJson);
-        } catch (e) {
-          console.error("Error parsing breakdown:", e, "Raw JSON:", breakdownJson);
-          breakdown = {};
-        }
 
-        // Fill receipt details
-        document.getElementById("receipt-number").textContent = id;
-        document.getElementById("receipt-date").textContent = new Date(date).toLocaleString();
-        document.getElementById("receipt-student-id").textContent = userId;
-        document.getElementById("receipt-student-name").textContent = userName;
-       // document.getElementById("receipt-student-matric").textContent = userMatric;
-        document.getElementById("receipt-total").textContent = `₦${parseFloat(nairaEquivalent || 0).toFixed(2)}`;
-        document.getElementById("receipt-tokens").textContent = `${parseFloat(amount || 0).toFixed(2)}`;
-        
-        // Fill receipt items
-        const itemsContainer = document.getElementById("receipt-items");
-        itemsContainer.innerHTML = "";
-        
-        if (breakdown && typeof breakdown === "object" && Object.keys(breakdown).length > 0) {
-          for (const key in breakdown) {
-            const label = key.replace(/fee$/, "").replace(/_/g, " ");
-            const value = parseFloat(breakdown[key]) || 0;
-            
-            const row = document.createElement("tr");
-            row.innerHTML = `
-              <td>${capitalize(label)} Fee</td>
-              <td>₦${value.toFixed(2)}</td>
-            `;
-            itemsContainer.appendChild(row);
-          }
-        } else {
-          // If no breakdown, just show the total
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${capitalize(type)} Payment</td>
-            <td>₦${parseFloat(nairaEquivalent || 0).toFixed(2)}</td>
-          `;
-          itemsContainer.appendChild(row);
-        }
-        
-        // Show and print the receipt
-        receipt.style.display = "block";
-        window.print();
-        receipt.style.display = "none";
-      } catch (error) {
-        console.error("Error generating receipt:", error);
-        alert("Error generating receipt. Please try again.");
+    function rewardStudent() {
+      const matricNo = document.getElementById("matricNo").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const tokenAmount = parseFloat(document.getElementById("tokenAmount").value);
+      const nairaAmount = tokenAmount * 800;
+      const feeType = document.getElementById("feeType").value;
+      
+      if (!matricNo || !description || tokenAmount <= 0) {
+        alert("Please fill all fields with valid values");
+        return;
       }
+
+      // Create breakdown object if fee type is selected
+      let breakdown = {};
+      if (feeType && feeType !== "") {
+        breakdown[feeType] = nairaAmount;
+      }
+
+      // Find student by matric number
+      db.ref("users").orderByChild("matric").equalTo(matricNo).once("value")
+        .then((snapshot) => {
+          if (!snapshot.exists()) {
+            throw new Error("Student not found with this matric number");
+          }
+          
+          // Get the student's data (there should be only one match)
+          let studentId, studentData;
+          snapshot.forEach((childSnapshot) => {
+            studentId = childSnapshot.key;
+            studentData = childSnapshot.val();
+            return true; // Break after first match
+          });
+          
+          // Update student's balance
+          const currentBalance = parseFloat(studentData.balance || 0);
+          const newBalance = currentBalance + nairaAmount;
+          
+          // Create transaction record
+          const txnRef = db.ref("transactions/" + studentId).push();
+          const now = new Date().toISOString();
+          
+          // Prepare transaction data according to your structure
+          const transactionData = {
+            amount: tokenAmount,
+            date: now,
+            naira_equivalent: nairaAmount,
+            type: "reward",
+            description: description,
+            rewarded_by: userId,
+            user_id: studentId
+          };
+          
+          // Add breakdown if exists
+          if (Object.keys(breakdown).length > 0) {
+            transactionData.breakdown = breakdown;
+          }
+          
+          // Perform updates
+          return Promise.all([
+            db.ref("users/" + studentId).update({ balance: newBalance }),
+            txnRef.set(transactionData)
+          ]);
+        })
+        .then(() => {
+          alert(`Successfully rewarded student with ${tokenAmount} tokens (₦${nairaAmount.toFixed(2)})`);
+          document.getElementById("rewardForm").reset();
+          document.getElementById("nairaEquivalent").textContent = "₦0.00";
+        })
+        .catch((error) => {
+          console.error("Error rewarding student:", error);
+          alert("Error: " + error.message);
+        });
     }
   </script>
 </body>
