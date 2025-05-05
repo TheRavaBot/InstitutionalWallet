@@ -108,8 +108,8 @@
         breakdown[rewardType] = nairaAmount;
       }
 
-      // Find student by matric number
-      db.ref("users").once("value")
+      // Find student by matric number in the correct path
+      db.ref("unilorin-ict/users").once("value")
         .then((snapshot) => {
           let studentFound = false;
           let studentId, studentData;
@@ -117,7 +117,6 @@
           // Search through all users for matching matric number
           snapshot.forEach((childSnapshot) => {
             const user = childSnapshot.val();
-            console.log(user.matric);
             if (user.matric === matricNo) {
               studentFound = true;
               studentId = childSnapshot.key;
@@ -130,12 +129,12 @@
             throw new Error("Student not found with matric number: " + matricNo);
           }
           
-          // Update student's balance
+          // Update student's balance in the correct path
           const currentBalance = parseFloat(studentData.balance || 0);
           const newBalance = currentBalance + nairaAmount;
           
-          // Create transaction record
-          const txnRef = db.ref("transactions/" + studentId).push();
+          // Create transaction record in the correct path
+          const txnRef = db.ref("unilorin-ict/transactions/" + studentId).push();
           const now = new Date().toISOString();
           
           // Prepare transaction data
@@ -154,9 +153,9 @@
             transactionData.breakdown = breakdown;
           }
           
-          // Perform updates
+          // Perform updates with correct paths
           return Promise.all([
-            db.ref("users/" + studentId).update({ balance: newBalance }),
+            db.ref("unilorin-ict/users/" + studentId).update({ balance: newBalance }),
             txnRef.set(transactionData)
           ]);
         })
