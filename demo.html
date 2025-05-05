@@ -172,6 +172,13 @@
         <span class="receipt-label">Student Name:</span>
         <span id="receipt-student-name">---</span>
       </div>
+
+            <div class="receipt-row">
+        <span class="receipt-label">Student Matric:</span>
+        <span id="receipt-student-matric">---</span>
+      </div>
+
+    
     </div>
     
     <table class="receipt-table">
@@ -345,6 +352,7 @@
         document.getElementById("receipt-date").textContent = new Date(date).toLocaleString();
         document.getElementById("receipt-student-id").textContent = userId;
         document.getElementById("receipt-student-name").textContent = userName;
+       // document.getElementById("receipt-student-matric").textContent = userMatric;
         document.getElementById("receipt-total").textContent = `₦${parseFloat(nairaEquivalent || 0).toFixed(2)}`;
         document.getElementById("receipt-tokens").textContent = `${parseFloat(amount || 0).toFixed(2)}`;
         
