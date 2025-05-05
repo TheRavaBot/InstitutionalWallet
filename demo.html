@@ -117,6 +117,7 @@
           // Search through all users for matching matric number
           snapshot.forEach((childSnapshot) => {
             const user = childSnapshot.val();
+            console.log(user.matric);
             if (user.matric === matricNo) {
               studentFound = true;
               studentId = childSnapshot.key;
