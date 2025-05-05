@@ -35,16 +35,12 @@
       
       <p>Naira Equivalent: <span id="nairaEquivalent">₦0.00</span></p>
       
-      <label for="feeType">Fee Type (for breakdown):</label>
-      <select id="feeType">
-        <option value="">-- Select Fee Type --</option>
-        <option value="departmentfee">Department Fee</option>
-        <option value="graduationfee">Graduation Fee</option>
-        <option value="hostelfee">Hostel Fee</option>
-        <option value="matriculationfee">Matriculation Fee</option>
-        <option value="schoolfee">School Fee</option>
-        <option value="lostfee">Lost Item Fee</option>
-        <option value="other">Other</option>
+      <label for="rewardType">Reward Type:</label>
+      <select id="rewardType">
+        <option value="">-- Select Reward Type --</option>
+        <option value="departmentfee">Scholar (Department)</option>
+        <option value="facultyfee">Scholar (Faculty)</option>
+        <option value="institutionfee">Scholar (Institution)</option>
       </select>
       
       <button type="button" onclick="rewardStudent()">Reward Student</button>
@@ -82,7 +78,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // Check if user is admin (you may want to implement proper admin authentication)
+    // Check if user is admin
     const userId = localStorage.getItem("user_id");
     if (!userId) {
       window.location.href = "login.html";
@@ -99,33 +95,39 @@
       const description = document.getElementById("description").value.trim();
       const tokenAmount = parseFloat(document.getElementById("tokenAmount").value);
       const nairaAmount = tokenAmount * 800;
-      const feeType = document.getElementById("feeType").value;
+      const rewardType = document.getElementById("rewardType").value;
       
       if (!matricNo || !description || tokenAmount <= 0) {
         alert("Please fill all fields with valid values");
         return;
       }
 
-      // Create breakdown object if fee type is selected
+      // Create breakdown object if reward type is selected
       let breakdown = {};
-      if (feeType && feeType !== "") {
-        breakdown[feeType] = nairaAmount;
+      if (rewardType && rewardType !== "") {
+        breakdown[rewardType] = nairaAmount;
       }
 
       // Find student by matric number
-      db.ref("users").orderByChild("matric").equalTo(matricNo).once("value")
+      db.ref("users").once("value")
         .then((snapshot) => {
-          if (!snapshot.exists()) {
-            throw new Error("Student not found with this matric number");
-          }
-          
-          // Get the student's data (there should be only one match)
+          let studentFound = false;
           let studentId, studentData;
+          
+          // Search through all users for matching matric number
           snapshot.forEach((childSnapshot) => {
-            studentId = childSnapshot.key;
-            studentData = childSnapshot.val();
-            return true; // Break after first match
+            const user = childSnapshot.val();
+            if (user.matric === matricNo) {
+              studentFound = true;
+              studentId = childSnapshot.key;
+              studentData = user;
+              return true; // Break the loop
+            }
           });
+          
+          if (!studentFound) {
+            throw new Error("Student not found with matric number: " + matricNo);
+          }
           
           // Update student's balance
           const currentBalance = parseFloat(studentData.balance || 0);
@@ -135,7 +137,7 @@
           const txnRef = db.ref("transactions/" + studentId).push();
           const now = new Date().toISOString();
           
-          // Prepare transaction data according to your structure
+          // Prepare transaction data
           const transactionData = {
             amount: tokenAmount,
             date: now,
