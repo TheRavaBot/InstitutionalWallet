@@ -220,7 +220,130 @@
   </script>
 
   <script>
-    // Firebase config
+    // // Firebase config
+    // const firebaseConfig = {
+    //   apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+    //   authDomain: "project-iot-51262.firebaseapp.com",
+    //   databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+    //   projectId: "project-iot-51262",
+    //   storageBucket: "project-iot-51262.appspot.com",
+    //   messagingSenderId: "785303672386",
+    //   appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+    // };
+
+    // firebase.initializeApp(firebaseConfig);
+    // const db = firebase.database();
+
+    // const userId = localStorage.getItem("user_id");
+    // if (!userId) {
+    //   // Redirect to login if no session
+    //   window.location.href = "login.html";
+    // }
+
+    // let userName = "";
+    // let userBalance = 0;
+
+    // // Fetch user data
+    // db.ref("unilorin-ict/users/" + userId).once("value", snapshot => {
+    //   const user = snapshot.val();
+    //   if (user) {
+    //     userName = user.name || "";
+    //     userBalance = parseFloat(user.balance || 0);
+    //     document.getElementById("welcomeUser").innerText = `Welcome, ${userName}!`;
+    //     document.getElementById("tokenAmount").innerText = (userBalance / 800).toFixed(2);
+    //     document.getElementById("nairaAmount").innerText = "₦" + userBalance.toFixed(2);
+    //   }
+    // });
+
+    // // Fetch transaction history
+    // db.ref("unilorin-ict/transactions/" + userId)
+    //   .orderByChild("date")
+    //   .once("value", (snapshot) => {
+    //     const tbody = document.getElementById("transactionTableBody");
+    //     const transactions = [];
+
+    //     snapshot.forEach((childSnap) => {
+    //       transactions.push({ id: childSnap.key, ...childSnap.val() });
+    //     });
+
+    //     transactions.reverse().forEach((txn) => {
+    //       const row = document.createElement("tr");
+
+    //       let breakdownText = "";
+    //       if (txn.breakdown && typeof txn.breakdown === "object") {
+    //         const items = [];
+    //         for (const key in txn.breakdown) {
+    //           const label = key.replace(/fee$/, "").replace(/_/g, " ");
+    //           const value = parseFloat(txn.breakdown[key]);
+    //           items.push(`${capitalize(label)}: ₦${value.toLocaleString()}`);
+    //         }
+    //         breakdownText = items.join(", ");
+    //       } else {
+    //         breakdownText = "—"; // No breakdown
+    //       }
+
+    //       row.innerHTML = `
+    //         <td>${capitalize(txn.type)}</td>
+    //         <td>${(parseFloat(txn.amount)).toFixed(2)}</td>
+    //         <td>₦${parseFloat(txn.naira_equivalent).toFixed(2)}</td>
+    //         <td>${breakdownText}</td>
+    //         <td>${new Date(txn.date).toLocaleString()}</td>
+    //         <td class="no-print"><button class="print-btn" onclick="printReceipt('${txn.id}', '${txn.type}', ${txn.amount}, ${txn.naira_equivalent}, '${JSON.stringify(txn.breakdown || {})}', '${txn.date}')">Print Receipt</button></td>
+    //       `;
+    //       tbody.appendChild(row);
+    //     });
+    //   });
+
+    // function capitalize(text) {
+    //   return text.charAt(0).toUpperCase() + text.slice(1);
+    // }
+    
+    // // Print receipt function
+    // function printReceipt(id, type, amount, nairaEquivalent, breakdownJson, date) {
+    //   const breakdown = JSON.parse(breakdownJson);
+    //   const receipt = document.getElementById("receipt-template");
+      
+    //   // Fill receipt details
+    //   document.getElementById("receipt-number").textContent = id;
+    //   document.getElementById("receipt-date").textContent = new Date(date).toLocaleString();
+    //   document.getElementById("receipt-student-id").textContent = userId;
+    //   document.getElementById("receipt-student-name").textContent = userName;
+    //   document.getElementById("receipt-total").textContent = `₦${parseFloat(nairaEquivalent).toFixed(2)}`;
+    //   document.getElementById("receipt-tokens").textContent = `${parseFloat(amount).toFixed(2)}`;
+      
+    //   // Fill receipt items
+    //   const itemsContainer = document.getElementById("receipt-items");
+    //   itemsContainer.innerHTML = "";
+      
+    //   if (breakdown && typeof breakdown === "object") {
+    //     for (const key in breakdown) {
+    //       const label = key.replace(/fee$/, "").replace(/_/g, " ");
+    //       const value = parseFloat(breakdown[key]);
+          
+    //       const row = document.createElement("tr");
+    //       row.innerHTML = `
+    //         <td>${capitalize(label)} Fee</td>
+    //         <td>₦${value.toFixed(2)}</td>
+    //       `;
+    //       itemsContainer.appendChild(row);
+    //     }
+    //   } else {
+    //     // If no breakdown, just show the total
+    //     const row = document.createElement("tr");
+    //     row.innerHTML = `
+    //       <td>${capitalize(type)} Payment</td>
+    //       <td>₦${parseFloat(nairaEquivalent).toFixed(2)}</td>
+    //     `;
+    //     itemsContainer.appendChild(row);
+    //   }
+      
+    //   // Show and print the receipt
+    //   receipt.style.display = "block";
+    //   window.print();
+    //   receipt.style.display = "none";
+    // }
+
+     // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
       authDomain: "project-iot-51262.firebaseapp.com",
@@ -236,22 +359,19 @@
 
     const userId = localStorage.getItem("user_id");
     if (!userId) {
-      // Redirect to login if no session
       window.location.href = "login.html";
     }
 
-    let userName = "";
+    let userName = "Student"; // Default name
     let userBalance = 0;
 
     // Fetch user data
     db.ref("unilorin-ict/users/" + userId).once("value", snapshot => {
       const user = snapshot.val();
       if (user) {
-        userName = user.name || "";
+        userName = user.name || "Student";
         userBalance = parseFloat(user.balance || 0);
-        document.getElementById("welcomeUser").innerText = `Welcome, ${userName}!`;
-        document.getElementById("tokenAmount").innerText = (userBalance / 800).toFixed(2);
-        document.getElementById("nairaAmount").innerText = "₦" + userBalance.toFixed(2);
+        // Removed references to non-existent elements
       }
     });
 
@@ -263,14 +383,19 @@
         const transactions = [];
 
         snapshot.forEach((childSnap) => {
-          transactions.push({ id: childSnap.key, ...childSnap.val() });
+          transactions.push({ 
+            id: childSnap.key, 
+            ...childSnap.val(),
+            // Ensure breakdown exists and is properly formatted
+            breakdown: childSnap.val().breakdown || {}
+          });
         });
 
         transactions.reverse().forEach((txn) => {
           const row = document.createElement("tr");
 
           let breakdownText = "";
-          if (txn.breakdown && typeof txn.breakdown === "object") {
+          if (txn.breakdown && typeof txn.breakdown === "object" && Object.keys(txn.breakdown).length > 0) {
             const items = [];
             for (const key in txn.breakdown) {
               const label = key.replace(/fee$/, "").replace(/_/g, " ");
@@ -279,16 +404,29 @@
             }
             breakdownText = items.join(", ");
           } else {
-            breakdownText = "—"; // No breakdown
+            breakdownText = "—";
           }
+
+          // Safely handle missing naira_equivalent
+          const nairaEquivalent = txn.naira_equivalent || 
+                                (txn.breakdown ? Object.values(txn.breakdown).reduce((a, b) => a + parseFloat(b), 0) : 0);
 
           row.innerHTML = `
             <td>${capitalize(txn.type)}</td>
             <td>${(parseFloat(txn.amount)).toFixed(2)}</td>
-            <td>₦${parseFloat(txn.naira_equivalent).toFixed(2)}</td>
+            <td>${nairaEquivalent ? '₦' + parseFloat(nairaEquivalent).toFixed(2) : '—'}</td>
             <td>${breakdownText}</td>
             <td>${new Date(txn.date).toLocaleString()}</td>
-            <td class="no-print"><button class="print-btn" onclick="printReceipt('${txn.id}', '${txn.type}', ${txn.amount}, ${txn.naira_equivalent}, '${JSON.stringify(txn.breakdown || {})}', '${txn.date}')">Print Receipt</button></td>
+            <td class="no-print">
+              <button class="print-btn" onclick="printReceipt(
+                '${txn.id.replace(/'/g, "\\'")}', 
+                '${txn.type.replace(/'/g, "\\'")}', 
+                ${parseFloat(txn.amount)}, 
+                ${parseFloat(nairaEquivalent)}, 
+                '${JSON.stringify(txn.breakdown).replace(/'/g, "\\'")}', 
+                '${new Date(txn.date).toISOString()}'
+              )">Print Receipt</button>
+            </td>
           `;
           tbody.appendChild(row);
         });
@@ -298,49 +436,61 @@
       return text.charAt(0).toUpperCase() + text.slice(1);
     }
     
-    // Print receipt function
+    // Print receipt function with better error handling
     function printReceipt(id, type, amount, nairaEquivalent, breakdownJson, date) {
-      const breakdown = JSON.parse(breakdownJson);
-      const receipt = document.getElementById("receipt-template");
-      
-      // Fill receipt details
-      document.getElementById("receipt-number").textContent = id;
-      document.getElementById("receipt-date").textContent = new Date(date).toLocaleString();
-      document.getElementById("receipt-student-id").textContent = userId;
-      document.getElementById("receipt-student-name").textContent = userName;
-      document.getElementById("receipt-total").textContent = `₦${parseFloat(nairaEquivalent).toFixed(2)}`;
-      document.getElementById("receipt-tokens").textContent = `${parseFloat(amount).toFixed(2)}`;
-      
-      // Fill receipt items
-      const itemsContainer = document.getElementById("receipt-items");
-      itemsContainer.innerHTML = "";
-      
-      if (breakdown && typeof breakdown === "object") {
-        for (const key in breakdown) {
-          const label = key.replace(/fee$/, "").replace(/_/g, " ");
-          const value = parseFloat(breakdown[key]);
-          
+      try {
+        const receipt = document.getElementById("receipt-template");
+        let breakdown;
+        
+        try {
+          breakdown = JSON.parse(breakdownJson.replace(/\\'/g, "'"));
+        } catch (e) {
+          console.error("Error parsing breakdown:", e);
+          breakdown = {};
+        }
+
+        // Fill receipt details
+        document.getElementById("receipt-number").textContent = id;
+        document.getElementById("receipt-date").textContent = new Date(date).toLocaleString();
+        document.getElementById("receipt-student-id").textContent = userId;
+        document.getElementById("receipt-student-name").textContent = userName;
+        document.getElementById("receipt-total").textContent = `₦${parseFloat(nairaEquivalent || 0).toFixed(2)}`;
+        document.getElementById("receipt-tokens").textContent = `${parseFloat(amount || 0).toFixed(2)}`;
+        
+        // Fill receipt items
+        const itemsContainer = document.getElementById("receipt-items");
+        itemsContainer.innerHTML = "";
+        
+        if (breakdown && typeof breakdown === "object" && Object.keys(breakdown).length > 0) {
+          for (const key in breakdown) {
+            const label = key.replace(/fee$/, "").replace(/_/g, " ");
+            const value = parseFloat(breakdown[key]) || 0;
+            
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${capitalize(label)} Fee</td>
+              <td>₦${value.toFixed(2)}</td>
+            `;
+            itemsContainer.appendChild(row);
+          }
+        } else {
+          // If no breakdown, just show the total
           const row = document.createElement("tr");
           row.innerHTML = `
-            <td>${capitalize(label)} Fee</td>
-            <td>₦${value.toFixed(2)}</td>
+            <td>${capitalize(type)} Payment</td>
+            <td>₦${parseFloat(nairaEquivalent || 0).toFixed(2)}</td>
           `;
           itemsContainer.appendChild(row);
         }
-      } else {
-        // If no breakdown, just show the total
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${capitalize(type)} Payment</td>
-          <td>₦${parseFloat(nairaEquivalent).toFixed(2)}</td>
-        `;
-        itemsContainer.appendChild(row);
+        
+        // Show and print the receipt
+        receipt.style.display = "block";
+        window.print();
+        receipt.style.display = "none";
+      } catch (error) {
+        console.error("Error generating receipt:", error);
+        alert("Error generating receipt. Please try again.");
       }
-      
-      // Show and print the receipt
-      receipt.style.display = "block";
-      window.print();
-      receipt.style.display = "none";
     }
   </script>
 </body>
