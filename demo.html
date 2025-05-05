@@ -35,13 +35,13 @@
       
       <p>Naira Equivalent: <span id="nairaEquivalent">₦0.00</span></p>
       
-      <label for="rewardType">Reward Type:</label>
+<!--       <label for="rewardType">Reward Type:</label>
       <select id="rewardType">
         <option value="">-- Select Reward Type --</option>
         <option value="departmentfee">Scholar (Department)</option>
         <option value="facultyfee">Scholar (Faculty)</option>
         <option value="institutionfee">Scholar (Institution)</option>
-      </select>
+      </select> -->
       
       <button type="button" onclick="rewardStudent()">Reward Student</button>
     </form>
@@ -95,7 +95,7 @@
       const description = document.getElementById("description").value.trim();
       const tokenAmount = parseFloat(document.getElementById("tokenAmount").value);
       const nairaAmount = tokenAmount * 800;
-      const rewardType = document.getElementById("rewardType").value;
+      const rewardType = document.getElementById("description").value;
       
       if (!matricNo || !description || tokenAmount <= 0) {
         alert("Please fill all fields with valid values");
