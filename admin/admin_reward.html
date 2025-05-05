@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reward Student</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+  <span class="menu-btn" onclick="toggleSidebar()" aria-label="Open Menu">☰</span>
+  <header class="header">
+    <h1 class="headerc">University Of Ilorin Digital Wallet</h1>
+  </header>
+
+  <section class="page-section dashboard">
+    <div class="icon-spot">
+      <img src="icon.png" alt="Dashboard Icon" class="icon">
+      <h2>Reward Student</h2>
+    </div>
+  </section>
+
+  <section class="page-section">
+    <form id="rewardForm">
+      <label for="matricNo">Matriculation Number:</label>
+      <input type="text" id="matricNo" name="matricNo" required />
+      
+      <label for="description">Description of Reward:</label>
+      <textarea id="description" name="description" required></textarea>
+      
+      <label for="tokenAmount">Token Amount:</label>
+      <input type="number" id="tokenAmount" name="tokenAmount" step="0.01" required oninput="calculateNaira()" />
+      
+      <p>Naira Equivalent: <span id="nairaEquivalent">₦0.00</span></p>
+      
+<!--       <label for="rewardType">Reward Type:</label>
+      <select id="rewardType">
+        <option value="">-- Select Reward Type --</option>
+        <option value="departmentfee">Scholar (Department)</option>
+        <option value="facultyfee">Scholar (Faculty)</option>
+        <option value="institutionfee">Scholar (Institution)</option>
+      </select> -->
+      
+      <button type="button" onclick="rewardStudent()">Reward Student</button>
+    </form>
+
+    <a href="dashboard.html">Back to Dashboard</a>
+  </section>
+  
+  <div id="sidebar-container"></div>
+
+  <script>
+    // Load sidebar.html into #sidebar-container
+    fetch('sidebar.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('sidebar-container').innerHTML = data;
+        // Re-run script inside sidebar.html after it's loaded
+        const script = document.createElement("script");
+        script.src = "script.js";
+        document.body.appendChild(script);
+      })
+      .catch(error => console.error('Sidebar load error:', error));
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+      authDomain: "project-iot-51262.firebaseapp.com",
+      databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+      projectId: "project-iot-51262",
+      storageBucket: "project-iot-51262.appspot.com",
+      messagingSenderId: "785303672386",
+      appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    // Check if user is admin
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      window.location.href = "login.html";
+    }
+
+    function calculateNaira() {
+      const amount = parseFloat(document.getElementById("tokenAmount").value) || 0;
+      const nairaEquivalent = amount * 800;
+      document.getElementById("nairaEquivalent").textContent = "₦" + nairaEquivalent.toFixed(2);
+    }
+
+    function rewardStudent() {
+      const matricNo = document.getElementById("matricNo").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const tokenAmount = parseFloat(document.getElementById("tokenAmount").value);
+      const nairaAmount = tokenAmount * 800;
+      const rewardType = document.getElementById("description").value;
+      
+      if (!matricNo || !description || tokenAmount <= 0) {
+        alert("Please fill all fields with valid values");
+        return;
+      }
+
+      // Create breakdown object if reward type is selected
+      let breakdown = {};
+      if (rewardType && rewardType !== "") {
+        breakdown[rewardType] = nairaAmount;
+      }
+
+      // Find student by matric number in the correct path
+      db.ref("unilorin-ict/users").once("value")
+        .then((snapshot) => {
+          let studentFound = false;
+          let studentId, studentData;
+          
+          // Search through all users for matching matric number
+          snapshot.forEach((childSnapshot) => {
+            const user = childSnapshot.val();
+            if (user.matric === matricNo) {
+              studentFound = true;
+              studentId = childSnapshot.key;
+              studentData = user;
+              return true; // Break the loop
+            }
+          });
+          
+          if (!studentFound) {
+            throw new Error("Student not found with matric number: " + matricNo);
+          }
+          
+          // Update student's balance in the correct path
+          const currentBalance = parseFloat(studentData.balance || 0);
+          const newBalance = currentBalance + nairaAmount;
+          
+          // Create transaction record in the correct path
+          const txnRef = db.ref("unilorin-ict/transactions/" + studentId).push();
+          const now = new Date().toISOString();
+          
+          // Prepare transaction data
+          const transactionData = {
+            amount: tokenAmount,
+            date: now,
+            naira_equivalent: nairaAmount,
+            type: "reward",
+            description: description,
+            rewarded_by: userId,
+            user_id: studentId
+          };
+          
+          // Add breakdown if exists
+          if (Object.keys(breakdown).length > 0) {
+            transactionData.breakdown = breakdown;
+          }
+          
+          // Perform updates with correct paths
+          return Promise.all([
+            db.ref("unilorin-ict/users/" + studentId).update({ balance: newBalance }),
+            txnRef.set(transactionData)
+          ]);
+        })
+        .then(() => {
+          alert(`Successfully rewarded student with ${tokenAmount} tokens (₦${nairaAmount.toFixed(2)})`);
+          document.getElementById("rewardForm").reset();
+          document.getElementById("nairaEquivalent").textContent = "₦0.00";
+        })
+        .catch((error) => {
+          console.error("Error rewarding student:", error);
+          alert("Error: " + error.message);
+        });
+    }
+  </script>
+</body>
+</html>
